@@ -105,11 +105,20 @@
     .btn-primary:hover, .btn-secondary:hover {
       background: rgb(150, 100, 60);
     }
-    .container {
-      max-width: 900px;
-      margin: 30px auto;
-      padding: 20px;
-    }
+  .content-flex {
+  display: flex;
+  justify-content: center;   /* يخلي المحتوى في النص */
+  align-items: flex-start;   /* يخلي العناصر على نفس الخط من فوق */
+  gap: 20px;                 /* مسافة بين العناصر */
+  flex-wrap: wrap;           /* لو الشاشة صغيرة ينزلوا تحت بعض */
+}
+
+/* خلي الـ container عريض شوية لكن في النص */
+.container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 20px;
+}
     table {
       width: 100%;
       border-collapse: collapse;
@@ -294,3 +303,4 @@
   </script>
 </body>
 </html>
+
