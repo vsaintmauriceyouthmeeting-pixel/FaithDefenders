@@ -1,11 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-
-
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ✅ تعديل الـ viewport عشان يثبت العرض زي اللاب -->
+  <meta name="viewport" content="width=1024, initial-scale=1.0">
   <title>الصفحة الرئيسية - الخدام</title>
 
   <style>
@@ -99,9 +97,11 @@
     }
 
     /* ===== Content ===== */
-    .content-flex {
+    .content {
       display: flex;
       justify-content: center;
+      gap: 20 px;
+      margin-top:20px; 
       align-items: flex-start;
       max-width: 1200px;
       margin: 40px auto;
@@ -127,22 +127,24 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       text-align: justify;
     }
+
     .logout {
-  background: #dc2626 !important; /* أحمر */
-  color: white !important;
-  padding: 6px 14px;
-  border-radius: 8px;
-}
-.logout:hover {
-  background: #991b1b !important; /* أغمق عند المرور */
-}
-/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
+      background: #dc2626 !important; /* أحمر */
+      color: white !important;
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    .logout:hover {
+      background: #991b1b !important; /* أغمق عند المرور */
+    }
+
+    /* ===== تعديل المساحات للشاشات الصغيرة (من غير ما يغير شكل التصميم) ===== */
+    @media (max-width: 1024px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+        margin: auto;   /* تمركز تلقائي */
+      }
+    }
 
   </style>
 </head>
@@ -150,7 +152,7 @@
   <!-- Header -->
   <header>
     <div class="header-container">
-      <div class="header-text">صفحة تحكم الخدام</div>
+      <div class="header-text">شباب حامي الايمان</div>
       <img src="logo.png" alt="Logo">
       <div class="header-text">أجتماع حامي الايمان جامعة وخرجين</div>
     </div>
@@ -159,7 +161,7 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="links">
-        <a href="home_teacher.html">الرئيسية</a>
+         <a href="home_teacher.html">الرئيسية</a>
         <a href="crpoems.html">الأشعار</a>
         <a href="ascenqrcode.html">مسح كود الحضور</a>
         <a href="program.html">برنامج اليوم</a>
@@ -169,7 +171,6 @@
     </div>
     <a href="index.html" class="logout">تسجيل الخروج</a>
   </nav>
-
   <!-- Content -->
   <div class="content-flex">
     <img src="pic.jpg" class="side-image" alt="Pic">
