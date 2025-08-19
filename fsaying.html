@@ -1,0 +1,375 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    
+  <meta charset="UTF-8">
+  <title>نظام إدارة أقوال الآباء</title>
+
+  <!-- (اختياري) مكتبة Excel لو حبيتي تصدّري لملف xlsx -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+    :root {
+      --color1: rgb(250, 238, 180);
+      --color2: rgb(212, 46, 35);
+      --color3: rgb(34, 42, 59);
+      --color4: rgb(170, 123, 76);
+      --color5: rgb(253, 244, 204);
+      --color6: rgb(255, 255, 255);
+    }
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--color6);
+      color: var(--color3);
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: var(--color5);
+      padding: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 10;
+      z-index: 1000;
+    }
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: row-reverse;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .header-container img {
+      width: 300px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .header-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--color4);
+      white-space: nowrap;
+    }
+    nav.navbar {
+      margin: 20px auto;
+      background-color: var(--color5);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 1200px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav.navbar .links {
+      display: flex;
+      gap: 20px;
+    }
+    nav.navbar a {
+      text-decoration: none;
+      color: var(--color3);
+      font-weight: 600;
+      padding: 5px 10px;
+      transition: color 0.3s;
+    }
+    nav.navbar a:hover {
+      color: var(--color2);
+    }
+    nav.navbar .logout {
+      color: var(--color2);
+      font-weight: bold;
+    }
+
+    .btn-primary, .btn-secondary {
+      background: var(--color4);
+      color: var(--color6);
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 8px rgb(170, 123, 76);
+    }
+    .btn-primary:hover, .btn-secondary:hover {
+      background: rgb(150, 100, 60);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    /* عناصر الإدخال */
+    .input, textarea {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin: 8px 0;
+    }
+    textarea { min-height: 120px; }
+
+    /* جدول موحّد مثل جدول الحضور */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+      text-align: center;
+      padding: 8px;
+    }
+    th {
+      background-color: var(--color5);
+    }
+
+    /* شارة حالة التصدير */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #eee;
+      color: #333;
+    }
+    .badge.exported {
+      background: rgba(170,123,76,0.15);
+      color: var(--color4);
+      border: 1px solid rgba(170,123,76,0.35);
+    }
+    .logout {
+  background: #dc2626 !important; /* أحمر */
+  color: white !important;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+.logout:hover {
+  background: #991b1b !important; /* أغمق عند المرور */
+}
+/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+@media (max-width: 768px) {
+  .header-container, .content-flex, nav.navbar {
+    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+    margin: auto;   /* تمركز تلقائي */
+  }
+}
+
+  </style>
+</head>
+<body>
+
+  <!-- الهيدر -->
+  <header>
+    <div class="header-container">
+      <div class="header-text">نظام إدارة أقوال الآباء</div>
+      <img src="logo.png" alt="Logo">
+      <div class="header-text">أجتماع حامي الايمان جامعة وخرجين</div>
+    </div>
+  </header>
+
+  <!-- شريط التنقل (نفس الموجود في الصفحة المحفوظة) -->
+  <nav class="navbar">
+    <div class="links">
+        <a href="home_teacher.html">الرئيسية</a>
+        <a href="crpoems.html">الأشعار</a>
+        <a href="ascenqrcode.html">مسح كود الحضور</a>
+        <a href="program.html">برنامج اليوم</a>
+        <a href="trip.html">إدارة الرحلات</a>
+        <a href="fsaying.html">أقوال الآباء</a>
+        <a href="dataview.html">بيانات المخدومين</a>
+    </div>
+    <a href="index.html" class="logout">تسجيل الخروج</a>
+  </nav>
+
+  <!-- المحتوى -->
+  <div class="container">
+    <h3>إضافة قول جديد</h3>
+    <textarea id="quoteText" class="input" placeholder="أدخل نص القول..."></textarea>
+    <input id="authorName" class="input" type="text" placeholder="اسم الخادم" />
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+      <button id="saveBtn" class="btn-primary">حفظ</button>
+      <button id="clearBtn" class="btn-secondary">مسح الحقول</button>
+      <button id="exportBtn" class="btn-primary">تصدير الأقوال المُعلّمة</button>
+    </div>
+    <div id="message" class="alert" style="display:none; margin-top:10px; color:green; font-weight:700;"></div>
+  </div>
+
+  <!-- جدول عرض الأقوال -->
+  <div class="container">
+    <h2>قائمة الأقوال</h2>
+    <table id="quotesTable">
+      <thead>
+        <tr>
+          <th>النص</th>
+          <th>الخادم</th>
+          <th>التاريخ</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+  const STORAGE_KEY = 'fatherQuotes';
+
+const quoteTextEl = document.getElementById('quoteText');
+const authorNameEl = document.getElementById('authorName');
+const saveBtn = document.getElementById('saveBtn');
+const clearBtn = document.getElementById('clearBtn');
+const exportBtn = document.getElementById('exportBtn');
+const messageEl = document.getElementById('message');
+const tableBody = document.querySelector('#quotesTable tbody');
+
+function showMsg(txt, ok=true) {
+  messageEl.textContent = txt;
+  messageEl.style.color = ok ? 'green' : 'crimson';
+  messageEl.style.display = 'block';
+  setTimeout(() => messageEl.style.display = 'none', 2000);
+}
+
+function readQuotes() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+function writeQuotes(arr) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function renderTable() {
+  const quotes = readQuotes();
+  tableBody.innerHTML = '';
+
+  if (!quotes.length) {
+    tableBody.innerHTML = `<tr><td colspan="5">لا توجد أقوال مسجلة حاليًا.</td></tr>`;
+    return;
+  }
+
+  quotes
+    .sort((a,b) => (b.date || '').localeCompare(a.date || ''))
+    .forEach(q => {
+      const tr = document.createElement('tr');
+
+      const tdText = document.createElement('td');
+      tdText.textContent = q.text || '';
+      tr.appendChild(tdText);
+
+      const tdAuthor = document.createElement('td');
+      tdAuthor.textContent = q.author || '';
+      tr.appendChild(tdAuthor);
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = q.date ? formatDate(q.date) : '';
+      tr.appendChild(tdDate);
+
+      const tdState = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'badge' + (q.exported ? ' exported' : '');
+      badge.textContent = q.exported ? 'معلّم للتصدير' : 'غير معلّم';
+      tdState.appendChild(badge);
+      tr.appendChild(tdState);
+
+      const tdActions = document.createElement('td');
+      tdActions.style.display = 'flex';
+      tdActions.style.gap = '8px';
+      tdActions.style.justifyContent = 'center';
+
+      const btnToggle = document.createElement('button');
+      btnToggle.className = 'btn-secondary';
+      btnToggle.textContent = q.exported ? 'إلغاء التصدير' : 'تحديد للتصدير';
+      btnToggle.onclick = () => toggleExport(q.id);
+
+      const btnDelete = document.createElement('button');
+      btnDelete.className = 'btn-secondary';
+      btnDelete.textContent = 'حذف';
+      btnDelete.onclick = () => deleteQuote(q.id);
+
+      tdActions.appendChild(btnToggle);
+      tdActions.appendChild(btnDelete);
+      tr.appendChild(tdActions);
+
+      tableBody.appendChild(tr);
+    });
+}
+
+function addQuote() {
+  const text = (quoteTextEl.value || '').trim();
+  const author = (authorNameEl.value || '').trim();
+  if (!text || !author) return showMsg('يرجى تعبئة كل الحقول', false);
+
+  const quotes = readQuotes();
+  const newQuote = {
+    id: Date.now(),
+    text, author,
+    date: new Date().toISOString(),
+    exported: false
+  };
+  quotes.push(newQuote);
+  writeQuotes(quotes);
+  quoteTextEl.value = '';
+  authorNameEl.value = '';
+  renderTable();
+  showMsg('تم حفظ القول بنجاح');
+}
+
+function deleteQuote(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا القول؟')) return;
+  const quotes = readQuotes().filter(q => q.id !== id);
+  writeQuotes(quotes);
+  renderTable();
+  showMsg('تم حذف القول');
+}
+
+function toggleExport(id) {
+  const quotes = readQuotes().map(q => q.id === id ? { ...q, exported: !q.exported } : q);
+  writeQuotes(quotes);
+  renderTable();
+}
+
+function clearInputs() {
+  quoteTextEl.value = '';
+  authorNameEl.value = '';
+}
+
+// ==== التعديل: عرض الأقوال المُعلّمة في صفحة جديدة بدل Excel ====
+function exportMarkedToExcel() {
+  const quotes = readQuotes().filter(q => q.exported);
+  if (!quotes.length) return showMsg('لا توجد أقوال معلّمة للتصدير', false);
+
+  // حفظ البيانات مؤقتًا في sessionStorage
+  sessionStorage.setItem('exportedQuotes', JSON.stringify(quotes));
+
+  // فتح صفحة العرض
+  window.open('export-father-quotes.html', '_blank');
+}
+
+// ربط الأحداث
+saveBtn.addEventListener('click', addQuote);
+clearBtn.addEventListener('click', clearInputs);
+exportBtn.addEventListener('click', exportMarkedToExcel);
+
+// تحميل أولي
+document.addEventListener('DOMContentLoaded', renderTable);
+renderTable();
+  </script>
+</body>
+</html>

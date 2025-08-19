@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>بيانات المخدومين</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+    :root {
+      --color1: rgb(250, 238, 180);
+      --color2: rgb(212, 46, 35);
+      --color3: rgb(34, 42, 59);
+      --color4: rgb(170, 123, 76);
+      --color5: rgb(253, 244, 204);
+      --color6: rgb(255, 255, 255);
+    }
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--color6);
+      color: var(--color3);
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: var(--color5);
+      padding: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: row-reverse;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .header-container img {
+      width: 300px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .header-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--color4);
+      white-space: nowrap;
+    }
+    nav.navbar {
+      margin: 20px auto;
+      background-color: var(--color5);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 1200px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav.navbar .links {
+      display: flex;
+      gap: 20px;
+    }
+    nav.navbar a {
+      text-decoration: none;
+      color: var(--color3);
+      font-weight: 600;
+      padding: 5px 10px;
+      transition: color 0.3s;
+    }
+    nav.navbar a:hover {
+      color: var(--color2);
+    }
+    nav.navbar .logout {
+      color: var(--color2);
+      font-weight: bold;
+    }
+    .btn-primary {
+      background: var(--color4);
+      color: var(--color6);
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 8px rgb(170, 123, 76);
+    }
+    .btn-primary:hover {
+      background: rgb(150, 100, 60);
+    }
+    .logout {
+  background: #dc2626 !important; /* أحمر */
+  color: white !important;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+.logout:hover {
+  background: #991b1b !important; /* أغمق عند المرور */
+}
+/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+@media (max-width: 768px) {
+  .header-container, .content-flex, nav.navbar {
+    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+    margin: auto;   /* تمركز تلقائي */
+  }
+}
+
+  </style>
+</head>
+<body>
+
+  <!-- الهيدر -->
+  <header>
+    <div class="header-container">
+      <div class="header-text">بيانات المخدومين</div>
+      <img src="logo.png" alt="Logo" />
+      <div class="header-text">اجتماع حامي الإيمان - جامعة وخريجين</div>
+    </div>a
+  </header>
+
+  <!-- الناف بار -->
+  <nav class="navbar">
+    <div class="links">
+        <a href="home_teacher.html">الرئيسية</a>
+        <a href="crpoems.html">الأشعار</a>
+        <a href="ascenqrcode.html">مسح كود الحضور</a>
+        <a href="program.html">برنامج اليوم</a>
+        <a href="trip.html">إدارة الرحلات</a>
+        <a href="fsaying.html">أقوال الآباء</a>
+        <a href="dataview.html">بيانات المخدومين</a>
+    </div>
+    <a href="index.html" class="logout">تسجيل الخروج</a>
+  </nav>
+
+  <!-- البحث -->
+  <div class="container max-w-5xl mx-auto p-4">
+    <input id="searchInput" type="text" placeholder="بحث..." 
+      class="w-full px-4 py-2 border rounded-md mb-4 focus:outline-none focus:ring focus:border-indigo-300"/>
+    
+    <!-- الجدول -->
+    <div class="overflow-x-auto bg-white shadow rounded-lg">
+      <table class="min-w-full border border-gray-200">
+        <thead id="tableHead" class="text-white" style="background-color: var(--color4);"></thead>
+        <tbody id="userTable" class="text-gray-700"></tbody>
+      </table>
+    </div>
+
+    <div class="mt-6 text-right">
+      <button id="exportBtn" class="btn-primary">تصدير إلى Excel</button>
+    </div>
+  </div>
+
+  <!-- Firebase Script -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDHcFkmP2rLgINNDIQfOrpKQxHKA7_0Q1A",
+      authDomain: "flutterattandaceforservice.firebaseapp.com",
+      projectId: "flutterattandaceforservice",
+      storageBucket: "flutterattandaceforservice.appspot.com",
+      messagingSenderId: "10517178916",
+      appId: "1:10517178916:web:b0a0b2960b2bfadae106b1"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const userTable = document.getElementById('userTable');
+    const tableHead = document.getElementById('tableHead');
+    const searchInput = document.getElementById('searchInput');
+    let allClients = [];
+    let allKeys = [];
+
+    async function fetchData() {
+      const snapshot = await db.collection('users').where('role', '==', 'client').get();
+      allClients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      if (allClients.length > 0) {
+        const keySet = new Set();
+        allClients.forEach(user => {
+          Object.keys(user).forEach(k => {
+            if (k !== "id" && k !== "uid" && k !== "qrCode") {
+              keySet.add(k);
+            }
+          });
+        });
+
+        allKeys = Array.from(keySet);
+        allKeys = allKeys.filter(k => k !== "name");
+        allKeys = ["name", ...allKeys, "qrCode"];
+
+        buildTableHead();
+        displayData(allClients);
+      }
+    }
+
+    function buildTableHead() {
+      tableHead.innerHTML = `<tr>${allKeys.map(key => 
+        `<th class="px-4 py-2 text-left">${key}</th>`).join('')}</tr>`;
+    }
+
+    function displayData(data) {
+      userTable.innerHTML = '';
+      data.forEach(user => {
+        let rowHtml = '<tr>';
+        allKeys.forEach(k => {
+          let val = user[k];
+          if (k === "qrCode" && val) {
+            rowHtml += `<td class="px-4 py-2 border"><img src="${val}" class="w-20 h-20"/></td>`;
+          } else {
+            if (val?.seconds) val = new Date(val.seconds * 1000).toLocaleString();
+            rowHtml += `<td class="px-4 py-2 border">${val ?? ''}</td>`;
+          }
+        });
+        rowHtml += '</tr>';
+        userTable.innerHTML += rowHtml;
+      });
+    }
+
+    searchInput.addEventListener('input', () => {
+      const term = searchInput.value.toLowerCase();
+      const filtered = allClients.filter(user =>
+        Object.entries(user).some(([k, val]) => 
+          k !== "id" && k !== "uid" &&
+          String(val).toLowerCase().includes(term)
+        )
+      );
+      displayData(filtered);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const cleanData = allClients.map(({id, uid, qrCode, ...rest}) => rest);
+      const worksheet = XLSX.utils.json_to_sheet(cleanData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Clients');
+      XLSX.writeFile(workbook, 'firebase_clients.xlsx');
+    });
+
+    fetchData();
+  </script>
+</body>
+</html>

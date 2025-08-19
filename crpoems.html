@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الأشعار</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+    :root {
+      --color1: rgb(250, 238, 180);
+      --color2: rgb(212, 46, 35);
+      --color3: rgb(34, 42, 59);
+      --color4: rgb(170, 123, 76);
+      --color5: rgb(253, 244, 204);
+      --color6: rgb(255, 255, 255);
+    }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background-color: var(--color6);
+      color: var(--color3);
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: var(--color5);
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: row-reverse;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .header-container img {
+      width: 300px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .header-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--color4);
+      white-space: nowrap;
+    }
+    nav.navbar {
+      margin: 20px auto;
+      background-color: var(--color5);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 1200px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav.navbar .links {
+      display: flex;
+      gap: 20px;
+    }
+    nav.navbar a {
+      text-decoration: none;
+      color: var(--color3);
+      font-weight: 600;
+      padding: 5px 10px;
+      transition: color 0.3s;
+    }
+    nav.navbar a:hover {
+      color: var(--color2);
+    }
+    nav.navbar .logout {
+      color: var(--color2);
+      font-weight: bold;
+    }
+    .btn {
+      background: var(--color4);
+      color: var(--color6);
+      border: none;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 8px rgb(170, 123, 76);
+    }
+    .btn:hover {
+      background: rgb(150, 100, 60);
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    .paragraph-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      padding: 15px;
+    }
+    .logout {
+  background: #dc2626 !important; /* أحمر */
+  color: white !important;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+.logout:hover {
+  background: #991b1b !important; /* أغمق عند المرور */
+}
+/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+@media (max-width: 768px) {
+  .header-container, .content-flex, nav.navbar {
+    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+    margin: auto;   /* تمركز تلقائي */
+  }
+}
+
+  </style>
+</head>
+<body>
+
+  <!-- الهيدر -->
+  <header>
+    <div class="header-container">
+      <div class="header-text">إدارة الأشعار</div>
+      <img src="logo.png" alt="Logo">
+      <div class="header-text">أجتماع حامي الايمان جامعة وخرجين</div>
+    </div>
+  </header>
+
+  <!-- شريط التنقل -->
+  <nav class="navbar">
+    <div class="links">
+        <a href="home_teacher.html">الرئيسية</a>
+        <a href="crpoems.html">الأشعار</a>
+        <a href="ascenqrcode.html">مسح كود الحضور</a>
+        <a href="program.html">برنامج اليوم</a>
+        <a href="trip.html">إدارة الرحلات</a>
+        <a href="fsaying.html">أقوال الآباء</a>
+        <a href="dataview.html">بيانات المخدومين</a>
+    </div>
+    <a href="index.html" class="logout">تسجيل الخروج</a>
+  </nav>
+
+  <!-- المحتوى -->
+  <div class="container">
+    <h2 class="text-xl font-bold mb-4">إضافة شعر جديد</h2>
+    <textarea id="poemText" placeholder="أدخل نص الشعر..." class="w-full border rounded p-2 mb-2"></textarea>
+    <input id="authorName" type="text" placeholder="اسم الكاتب" class="w-full border rounded p-2 mb-2" />
+    <button id="saveBtn" class="btn mb-6">حفظ</button>
+
+    <h2 class="text-xl font-bold mb-2">الأشعار</h2>
+    <button id="exportBtn" class="btn mb-4">عرض الأشعار المصدّرة</button>
+    <div id="poemsContainer"></div>
+  </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const poemText = document.getElementById('poemText');
+    const authorName = document.getElementById('authorName');
+    const saveBtn = document.getElementById('saveBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const poemsContainer = document.getElementById('poemsContainer');
+
+    function loadPoems() {
+      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
+      poemsContainer.innerHTML = '';
+      if (poems.length === 0) {
+        poemsContainer.innerHTML = '<p>لا توجد أشعار مسجلة حاليًا.</p>';
+        return;
+      }
+      poems.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'paragraph-card';
+        card.innerHTML = `
+          <p class="mb-2">${p.text}</p>
+          <p class="text-sm text-gray-600">الكاتب: ${p.author}</p>
+          <div class="flex gap-2 mt-2">
+            <button onclick="deletePoem(${p.id})" class="btn">حذف</button>
+            <button onclick="toggleExport(${p.id})" class="btn">${p.exported ? 'إلغاء التصدير' : 'تصدير'}</button>
+          </div>
+        `;
+        poemsContainer.appendChild(card);
+      });
+    }
+
+    saveBtn.addEventListener('click', () => {
+      const text = poemText.value.trim();
+      const author = authorName.value.trim();
+      if (!text || !author) return alert('يرجى تعبئة كل الحقول');
+      const newPoem = { id: Date.now(), text, author, date: new Date().toISOString(), exported: false };
+      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
+      poems.push(newPoem);
+      localStorage.setItem('poemsList', JSON.stringify(poems));
+      poemText.value = '';
+      authorName.value = '';
+      loadPoems();
+    });
+
+    window.deletePoem = function (id) {
+      if (!confirm('هل أنت متأكد من حذف هذا الشعر؟')) return;
+      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
+      const updated = poems.filter(p => p.id !== id);
+      localStorage.setItem('poemsList', JSON.stringify(updated));
+      loadPoems();
+    };
+
+    window.toggleExport = function (id) {
+      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
+      const updated = poems.map(p => p.id === id ? { ...p, exported: !p.exported } : p);
+      localStorage.setItem('poemsList', JSON.stringify(updated));
+      loadPoems();
+    };
+
+    exportBtn.addEventListener('click', function () {
+      const data = JSON.parse(localStorage.getItem('poemsList')) || [];
+      const exportedPoems = data.filter(p => p.exported);
+      sessionStorage.setItem('exportedPoems', JSON.stringify(exportedPoems));
+      window.open('export-poems.html', '_blank');
+    });
+
+    loadPoems();
+  });
+</script>
+</body>
+</html>

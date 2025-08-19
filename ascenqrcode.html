@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم المدرس</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <!-- مكتبة QR -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <!-- مكتبة Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- مكتبة الكاميرا لمسح QR -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+    :root {
+      --color1: rgb(250, 238, 180);
+      --color2: rgb(212, 46, 35);
+      --color3: rgb(34, 42, 59);
+      --color4: rgb(170, 123, 76);
+      --color5: rgb(253, 244, 204);
+      --color6: rgb(255, 255, 255);
+    }
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--color6);
+      color: var(--color3);
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: var(--color5);
+      padding: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 10;
+      z-index: 1000;
+    }
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: row-reverse;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .header-container img {
+      width: 300px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .header-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--color4);
+      white-space: nowrap;
+    }
+    nav.navbar {
+      margin: 20px auto;
+      background-color: var(--color5);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 1200px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav.navbar .links {
+      display: flex;
+      gap: 20px;
+    }
+    nav.navbar a {
+      text-decoration: none;
+      color: var(--color3);
+      font-weight: 600;
+      padding: 5px 10px;
+      transition: color 0.3s;
+    }
+    nav.navbar a:hover {
+      color: var(--color2);
+    }
+    nav.navbar .logout {
+      color: var(--color2);
+      font-weight: bold;
+    }
+    .btn-primary, .btn-secondary {
+      background: var(--color4);
+      color: var(--color6);
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 8px rgb(170, 123, 76);
+    }
+    .btn-primary:hover, .btn-secondary:hover {
+      background: rgb(150, 100, 60);
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+      text-align: center;
+      padding: 8px;
+    }
+    th {
+      background-color: var(--color5);
+    }
+    .logout {
+  background: #dc2626 !important; /* أحمر */
+  color: white !important;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+.logout:hover {
+  background: #991b1b !important; /* أغمق عند المرور */
+}
+/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+@media (max-width: 768px) {
+  .header-container, .content-flex, nav.navbar {
+    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+    margin: auto;   /* تمركز تلقائي */
+  }
+}
+
+  </style>
+</head>
+<body>
+  <!-- الهيدر -->
+  <header>
+    <div class="header-container">
+      <div class="header-text">ادارة الحضور</div>
+      <img src="logo.png" alt="Logo">
+      <div class="header-text">أجتماع حامي الايمان جامعة وخرجين</div>
+    </div>
+  </header>
+
+  <!-- شريط التنقل -->
+  <nav class="navbar">
+    <div class="links">
+      <a href="home_teacher.html">الرئيسية</a>
+      <a href="crpoems.html">الأشعار</a>
+      <a href="ascenqrcode.html">مسح كود الحضور</a>
+      <a href="program.html">برنامج اليوم</a>
+      <a href="trip.html">إدارة الرحلات</a>
+      <a href="fsaying.html">أقوال الآباء</a>
+      <a href="dataview.html">بيانات المخدومين</a>
+    </div>
+    <a href="index.html" class="logout">تسجيل الخروج</a>
+  </nav>
+
+  <!-- المحتوى -->
+  <div class="container">
+    <h3>إضافة حضور يدويًا</h3>
+    <input list="emailList" id="emailInput" placeholder="اكتب البريد الإلكتروني" class="w-full border rounded p-2 mb-2" />
+    <datalist id="emailList"></datalist>
+    <ul id="suggestions" class="mb-4"></ul>
+    <button onclick="addManualAttendance()" class="btn-secondary">إضافة يدويًا</button>
+    <div class="flex gap-4 flex-wrap mt-4">
+      <button onclick="exportAttendance()" class="btn-primary">تصدير إلى Excel</button>
+      <button onclick="deleteOldRecords()" class="btn-secondary">حذف البيانات الأقدم من 6 أشهر</button>
+    </div>
+    <div id="message" class="alert mt-4 text-green-600 font-semibold" style="display:none;"></div>
+  </div>
+
+  <!-- ماسح QR -->
+  <div class="container">
+    <h2>مسح QR لتسجيل الحضور</h2>
+    <div id="reader" style="width: 300px;"></div>
+    <div id="status"></div>
+  </div>
+
+  <!-- جدول عرض الحضور -->
+  <div class="container">
+    <h2>قائمة الحضور</h2>
+    <table id="attendanceTable">
+      <thead>
+        <tr>
+          <th>الاسم</th>
+          <th>الإيميل</th>
+          <th>طريقة التسجيل</th>
+          <th>التاريخ</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+  authDomain: "attandaceservice.firebaseapp.com",
+  projectId: "attandaceservice",
+  storageBucket: "attandaceservice.firebasestorage.app",
+  messagingSenderId: "414427228442",
+  appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+  measurementId: "G-Y1LGFK6JW5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function getTodayDate() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    }
+
+    async function registerAttendance(userId) {
+      try {
+        const userDoc = await db.collection('users').doc(userId).get();
+        if (!userDoc.exists) {
+          document.getElementById("status").innerText = "هذا المستخدم غير موجود.";
+          return;
+        }
+        const userData = userDoc.data();
+        const date = getTodayDate();
+        const attendanceRef = db.collection('attendance').doc(date);
+        await attendanceRef.set({
+          attendees: firebase.firestore.FieldValue.arrayUnion({
+            id: userId,
+            name: userData.name || "بدون اسم",
+            email: userData.email || "بدون إيميل",
+            method: "QR"
+          })
+        }, { merge: true });
+        document.getElementById("status").innerText = `تم تسجيل الحضور: ${userData.name}`;
+        loadAttendance(); // تحديث الجدول بعد التسجيل
+      } catch (error) {
+        document.getElementById("status").innerText = "حدث خطأ أثناء تسجيل الحضور.";
+        console.error(error);
+      }
+    }
+
+    // تحميل بيانات الحضور في الجدول
+    async function loadAttendance() {
+      try {
+        const tableBody = document.querySelector("#attendanceTable tbody");
+        tableBody.innerHTML = "";
+        const snapshot = await db.collection("attendance").get();
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const date = doc.id;
+          if (data.attendees) {
+            data.attendees.forEach(attendee => {
+              const row = `
+                <tr>
+                  <td>${attendee.name || "بدون اسم"}</td>
+                  <td>${attendee.email || "بدون إيميل"}</td>
+                  <td>${attendee.method || "-"}</td>
+                  <td>${date}</td>
+                </tr>
+              `;
+              tableBody.innerHTML += row;
+            });
+          }
+        });
+      } catch (error) {
+        console.error("خطأ في جلب البيانات:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: 250 };
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        decodedText => {
+          registerAttendance(decodedText);
+        }
+      ).catch(err => {
+        document.getElementById("status").innerText = "فشل تشغيل الكاميرا: " + err;
+      });
+
+      // تحميل أولي للجدول
+      loadAttendance();
+    });
+  </script>
+</body>
+</html>

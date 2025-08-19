@@ -1,0 +1,311 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الرحلات</title>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+    :root {
+      --color1: rgb(250, 238, 180);
+      --color2: rgb(212, 46, 35);
+      --color3: rgb(34, 42, 59);
+      --color4: rgb(170, 123, 76);
+      --color5: rgb(253, 244, 204);
+      --color6: rgb(255, 255, 255);
+    }
+
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--color6);
+      color: var(--color3);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ===== Header ===== */
+    header {
+      background-color: var(--color5);
+      padding: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: row-reverse;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .header-container img {
+      width: 300px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+
+    .header-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--color4);
+      white-space: nowrap;
+    }
+
+    /* ===== Navbar ===== */
+    nav.navbar {
+      margin: 20px auto;
+      background-color: var(--color5);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 1200px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav.navbar .links {
+      display: flex;
+      gap: 20px;
+    }
+
+    nav.navbar a {
+      text-decoration: none;
+      color: var(--color3);
+      font-weight: 600;
+      padding: 5px 10px;
+      transition: color 0.3s;
+    }
+
+    nav.navbar a:hover {
+      color: var(--color2);
+    }
+
+    nav.navbar .logout {
+      background: var(--color2);
+      color: var(--color6);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    nav.navbar .logout:hover {
+      background: #991b1b;
+    }
+
+    /* ===== Content ===== */
+    .content-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background-color: var(--color5);
+      border-radius: 15px;
+      border: 2px solid var(--color4);
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .card h4 {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    select, table {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      border-collapse: collapse;
+      background-color: var(--color6);
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: var(--color1);
+    }
+    /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+@media (max-width: 768px) {
+  .header-container, .content-flex, nav.navbar {
+    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+    margin: auto;   /* تمركز تلقائي */
+  }
+}
+
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="header-text">إدارة الرحلات</div>
+      <img src="logo.png" alt="Logo">
+      <div class="header-text">أجتماع حامي الايمان جامعة وخرجين</div>
+    </div>
+  </header>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="links">
+        <a href="home_student.html">الرئيسية</a>
+        <a href="export_poems.html">الأشعار</a>
+        <a href="rigester.html">مسح كود الحضور</a>
+        <a href="export.html">برنامج اليوم</a>
+        <a href="trip_detials.html">إدارة الرحلات</a>
+        <a href="export_father_quotes.html">أقوال الآباء</a>
+        <a href="updatedata.html">تعديل البيانات</a>
+    </div>
+    <a href="index.html" class="logout">تسجيل الخروج</a>
+  </nav>
+
+  <!-- Content -->
+  <div class="content-container">
+    <div class="card">
+      <label for="selectTrip" class="block font-medium">اختر الرحلة</label>
+      <select id="selectTrip">
+        <option value="">-- اختر رحلة --</option>
+      </select>
+    </div>
+
+    <div id="tripDetails" class="card" style="display:none;">
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <h4>تاريخ الرحلة:</h4>
+          <p id="detailsDate"></p>
+        </div>
+        <div>
+          <h4>وقت الرحلة:</h4>
+          <p id="detailsTime"></p>
+        </div>
+        <div>
+          <h4>السعر:</h4>
+          <p id="detailsPrice"></p>
+        </div>
+        <div>
+          <h4>الأماكن المتاحة:</h4>
+          <p id="detailsAvailable"></p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>اسم الرحلة</th>
+            <th>موعد الرحلة</th>
+            <th>سعر الرحلة</th>
+            <th>اسم المخدوم</th>
+            <th>ركوب الأتوبيس</th>
+          </tr>
+        </thead>
+        <tbody id="attendeeTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Firebase & Script -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+  authDomain: "attandaceservice.firebaseapp.com",
+  projectId: "attandaceservice",
+  storageBucket: "attandaceservice.firebasestorage.app",
+  messagingSenderId: "414427228442",
+  appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+  measurementId: "G-Y1LGFK6JW5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const tripsCollection = db.collection('trips');
+
+    const selectTrip = document.getElementById('selectTrip');
+    const tripDetails = document.getElementById('tripDetails');
+    const attendeeTableBody = document.getElementById('attendeeTableBody');
+    const detailsDate = document.getElementById('detailsDate');
+    const detailsTime = document.getElementById('detailsTime');
+    const detailsPrice = document.getElementById('detailsPrice');
+    const detailsAvailable = document.getElementById('detailsAvailable');
+
+    function loadTrips() {
+      tripsCollection.get().then(querySnapshot => {
+        selectTrip.innerHTML = '<option value="">-- اختر رحلة --</option>';
+        querySnapshot.forEach(doc => {
+          const trip = doc.data();
+          const option = document.createElement('option');
+          option.value = doc.id;
+          option.textContent = `${trip.name} - ${trip.date} - ${trip.time}`;
+          selectTrip.appendChild(option);
+        });
+      });
+    }
+
+    function loadAttendees(tripId) {
+      tripsCollection.doc(tripId).get().then(doc => {
+        if (doc.exists) {
+          const trip = doc.data();
+          const attendees = trip.attendees || {};
+
+          detailsDate.textContent = trip.date || '';
+          detailsTime.textContent = trip.time || '';
+          detailsPrice.textContent = `${trip.price || 0} جنيه`;
+          detailsAvailable.textContent = trip.available || 'غير محدد';
+
+          tripDetails.style.display = 'block';
+          attendeeTableBody.innerHTML = '';
+
+          for (const [key, attendee] of Object.entries(attendees)) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${trip.name}</td>
+              <td>${trip.date} ${trip.time}</td>
+              <td>${trip.price} جنيه</td>
+              <td>${attendee.name}</td>
+              <td>${attendee.bus ? 'نعم' : 'لا'}</td>
+            `;
+            attendeeTableBody.appendChild(row);
+          }
+        } else {
+          alert("لم يتم العثور على بيانات الرحلة.");
+        }
+      });
+    }
+
+    selectTrip.addEventListener('change', function () {
+      const tripId = selectTrip.value;
+      if (tripId) {
+        loadAttendees(tripId);
+      } else {
+        tripDetails.style.display = 'none';
+        attendeeTableBody.innerHTML = '';
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', loadTrips);
+  </script>
+</body>
+</html>

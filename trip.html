@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الرحلات</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+    :root {
+      --color1: rgb(250, 238, 180);
+      --color2: rgb(212, 46, 35);
+      --color3: rgb(34, 42, 59);
+      --color4: rgb(170, 123, 76);
+      --color5: rgb(253, 244, 204);
+      --color6: rgb(255, 255, 255);
+    }
+    body { font-family:'Tajawal',sans-serif; background:var(--color6); color:var(--color3); font-size:18px; margin:0; }
+    header { background:var(--color5); padding:10px; box-shadow:0 4px 12px rgba(0,0,0,.1); position:sticky; top:0; z-index:1000; }
+    .header-container{ display:flex; justify-content:space-between; align-items:center; flex-direction:row-reverse; max-width:1200px; margin:auto; }
+    .header-container img{ width:300px; height:90px; border-radius:50%; object-fit:cover; box-shadow:0 4px 8px rgba(0,0,0,.2); }
+    .header-text{ font-size:28px; font-weight:bold; color:var(--color4); }
+    nav.navbar{ margin:20px auto; background:var(--color5); padding:10px; border-radius:8px; max-width:1200px; display:flex; justify-content:space-between; align-items:center; }
+    nav.navbar .links{ display:flex; gap:20px; }
+    nav.navbar a{ text-decoration:none; color:var(--color3); font-weight:600; }
+    nav.navbar a:hover{ color:var(--color2); }
+    .logout {
+  background: #dc2626 !important; /* أحمر */
+  color: white !important;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+.logout:hover {
+  background: #991b1b !important; /* أغمق عند المرور */
+}
+    .btn-primary,.btn-secondary{ background:var(--color4); color:var(--color6); border:none; padding:8px 16px; font-size:16px; font-weight:700; border-radius:12px; cursor:pointer; transition:.3s; box-shadow:0 4px 8px rgb(170,123,76); }
+    .btn-primary:hover,.btn-secondary:hover{ background:rgb(150,100,60); }
+    .btn-danger { background: var(--color2); color:white; padding:6px 12px; border-radius:8px; font-size:14px; }
+    .btn-warning { background: orange; color:white; padding:6px 12px; border-radius:8px; font-size:14px; }
+    .container{ max-width:900px; margin:30px auto; padding:20px; }
+    .input,textarea,select{ width:100%; border:1px solid #ccc; border-radius:8px; padding:10px; font-size:16px; margin:8px 0; }
+    table{ width:100%; border-collapse:collapse; margin-top:20px; }
+    table,th,td{ border:1px solid #ccc; text-align:center; padding:8px; }
+    th{ background:var(--color5); }
+    #notification{ transition:.3s; }
+  /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+@media (max-width: 768px) {
+  .header-container, .content-flex, nav.navbar {
+    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+    margin: auto;   /* تمركز تلقائي */
+  }
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="header-text">نظام تسجيل الرحلات</div>
+      <img src="logo.png" alt="Logo">
+      <div class="header-text">أجتماع حامي الايمان جامعة وخرجين</div>
+    </div>
+  </header>
+
+  <nav class="navbar">
+    <div class="links">
+        <a href="home_teacher.html">الرئيسية</a>
+        <a href="crpoems.html">الأشعار</a>
+        <a href="ascenqrcode.html">مسح كود الحضور</a>
+        <a href="program.html">برنامج اليوم</a>
+        <a href="trip.html">إدارة الرحلات</a>
+        <a href="fsaying.html">أقوال الآباء</a>
+        <a href="dataview.html">بيانات المخدومين</a>
+    </div>
+    <a href="index.html" class="logout">تسجيل الخروج</a>
+  </nav>
+
+  <div class="container">
+    <div style="display:flex; gap:12px; margin-bottom:20px;">
+      <button id="newTripTab" class="btn-primary"><i class="fas fa-plus-circle"></i> رحلة جديدة</button>
+      <button id="existingTripTab" class="btn-secondary"><i class="fas fa-users"></i> تسجيل حضور</button>
+    </div>
+
+    <!-- فورم إنشاء رحلة جديدة -->
+    <div id="newTripForm">
+      <h2>إنشاء رحلة جديدة</h2>
+      <input id="tripName" class="input" type="text" placeholder="اسم الرحلة">
+      <input id="tripDate" class="input" type="date">
+      <input id="tripTime" class="input" type="time">
+      <input id="tripPrice" class="input" type="number" placeholder="سعر الرحلة">
+      <textarea id="tripDescription" class="input" placeholder="تفاصيل الرحلة..."></textarea>
+      <label>هل سيركب الأتوبيس؟</label>
+      <div>
+        <input type="radio" id="busYes" name="bus" value="نعم"> نعم
+        <input type="radio" id="busNo" name="bus" value="لا"> لا
+      </div>
+      <button id="saveNewTrip" class="btn-primary"><i class="fas fa-save"></i> حفظ الرحلة الجديدة</button>
+    </div>
+
+    <!-- فورم تسجيل حضور -->
+    <div id="existingTripForm" class="hidden">
+      <h2>تسجيل حضور لرحلة موجودة</h2>
+      <select id="selectTrip" class="input">
+        <option value="">-- اختر رحلة --</option>
+      </select>
+
+      <div id="tripDetails" class="hidden">
+        <h3>تفاصيل الرحلة</h3>
+        <p><b>التاريخ:</b> <span id="detailsDate"></span></p>
+        <p><b>الوقت:</b> <span id="detailsTime"></span></p>
+        <p><b>السعر الفردي:</b> <span id="detailsPrice"></span></p>
+        <p><b>عدد المسجلين:</b> <span id="attendeeCount">0</span></p>
+        <p><b>السعر الإجمالي:</b> <span id="totalPrice">0</span></p>
+        <button class="btn-danger" id="deleteTripBtn"><i class="fas fa-trash"></i> حذف الرحلة</button>
+      </div>
+
+      <h3>قائمة المسجلين</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>اسم الرحلة</th>
+            <th>الاسم</th>
+            <th>السعر الفردي</th>
+            <th>المبلغ المدفوع</th>
+            <th>المتبقي</th>
+            <th>ركوب الأتوبيس</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="attendeeTableBody"></tbody>
+      </table>
+
+      <h3>إضافة مخدوم جديد</h3>
+      <input id="attendeeName" class="input" type="text" placeholder="اسم المخدوم">
+      <input id="attendeeAmount" class="input" type="number" placeholder="المبلغ المدفوع">
+      <label>هل سيركب الأتوبيس؟</label>
+      <div>
+        <input type="radio" id="attendeeBusYes" name="attendeeBus" value="نعم"> نعم
+        <input type="radio" id="attendeeBusNo" name="attendeeBus" value="لا"> لا
+      </div>
+      <button id="saveAttendee" class="btn-primary"><i class="fas fa-user-plus"></i> تسجيل المخدوم</button>
+    </div>
+  </div>
+
+  <div id="notification" class="fixed top-4 right-4 p-4 rounded-lg shadow-lg hidden"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+  authDomain: "attandaceservice.firebaseapp.com",
+  projectId: "attandaceservice",
+  storageBucket: "attandaceservice.firebasestorage.app",
+  messagingSenderId: "414427228442",
+  appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+  measurementId: "G-Y1LGFK6JW5"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const newTripTab = document.getElementById("newTripTab");
+    const existingTripTab = document.getElementById("existingTripTab");
+    const newTripForm = document.getElementById("newTripForm");
+    const existingTripForm = document.getElementById("existingTripForm");
+    const saveNewTrip = document.getElementById("saveNewTrip");
+    const saveAttendee = document.getElementById("saveAttendee");
+    const selectTrip = document.getElementById("selectTrip");
+    const attendeeTableBody = document.getElementById("attendeeTableBody");
+    const notification = document.getElementById("notification");
+    const attendeeCountEl = document.getElementById("attendeeCount");
+    const totalPriceEl = document.getElementById("totalPrice");
+    const deleteTripBtn = document.getElementById("deleteTripBtn");
+
+    function showNotification(msg, type="success") {
+      notification.textContent = msg;
+      notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${type==="success" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`;
+      notification.classList.remove("hidden");
+      setTimeout(()=> notification.classList.add("hidden"), 3000);
+    }
+
+    // تبديل الفورمات
+    newTripTab.addEventListener("click",()=>{ newTripForm.classList.remove("hidden"); existingTripForm.classList.add("hidden"); });
+    existingTripTab.addEventListener("click",()=>{ existingTripForm.classList.remove("hidden"); newTripForm.classList.add("hidden"); });
+
+    // حفظ رحلة جديدة
+    saveNewTrip.addEventListener("click", async ()=>{
+      const name = document.getElementById("tripName").value;
+      const date = document.getElementById("tripDate").value;
+      const time = document.getElementById("tripTime").value;
+      const price = Number(document.getElementById("tripPrice").value);
+      const desc = document.getElementById("tripDescription").value;
+      const bus = document.getElementById("busYes").checked ? "نعم" : "لا";
+      if(!name || !date) return showNotification("أدخل البيانات كاملة","error");
+      await db.collection("trips").add({name,date,time,price,desc,bus});
+      showNotification("تم إضافة الرحلة بنجاح");
+      loadTrips();
+    });
+
+    // تحميل الرحلات
+    async function loadTrips(){
+      selectTrip.innerHTML = `<option value="">-- اختر رحلة --</option>`;
+      const snap = await db.collection("trips").get();
+      snap.forEach(doc=>{
+        selectTrip.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+      });
+    }
+    loadTrips();
+
+    // تحميل تفاصيل الرحلة
+    async function loadTripDetails(tripId){
+      attendeeTableBody.innerHTML="";
+      if(!tripId) return;
+      const tripDoc = await db.collection("trips").doc(tripId).get();
+      if(tripDoc.exists){
+        document.getElementById("tripDetails").classList.remove("hidden");
+        const d = tripDoc.data();
+        document.getElementById("detailsDate").textContent=d.date;
+        document.getElementById("detailsTime").textContent=d.time;
+        document.getElementById("detailsPrice").textContent=d.price;
+
+        const attendeesSnap = await db.collection("trips").doc(tripId).collection("attendees").get();
+        let count = 0;
+        let totalAmount = 0;
+        attendeesSnap.forEach(doc=>{
+          const a=doc.data();
+          const remaining = d.price - (a.amount || 0);
+          count++;
+          totalAmount += (a.amount || 0);
+          attendeeTableBody.innerHTML += `
+            <tr>
+              <td>${d.name}</td>
+              <td>${a.name}</td>
+              <td>${d.price}</td>
+              <td>${a.amount}</td>
+              <td>${remaining}</td>
+              <td>${a.bus}</td>
+              <td>
+                <button class="btn-warning" onclick="editAttendee('${tripId}','${doc.id}','${a.name}','${a.amount}')"><i class="fas fa-edit"></i></button>
+                <button class="btn-danger" onclick="deleteAttendee('${tripId}','${doc.id}')"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>`;
+        });
+        attendeeCountEl.textContent = count;
+        totalPriceEl.textContent = totalAmount;
+      }
+    }
+
+    // عند اختيار رحلة
+    selectTrip.addEventListener("change", ()=>{ loadTripDetails(selectTrip.value); });
+
+    // تسجيل مخدوم جديد
+    saveAttendee.addEventListener("click", async ()=>{
+      const tripId = selectTrip.value;
+      if(!tripId) return showNotification("اختر رحلة أولاً","error");
+      const name=document.getElementById("attendeeName").value;
+      const amount=Number(document.getElementById("attendeeAmount").value);
+      const bus=document.getElementById("attendeeBusYes").checked ? "نعم":"لا";
+      if(!name) return showNotification("أدخل اسم المخدوم","error");
+      await db.collection("trips").doc(tripId).collection("attendees").add({name,amount,bus});
+      showNotification("تم تسجيل المخدوم بنجاح");
+      loadTripDetails(tripId);
+    });
+
+    // تعديل المخدوم
+    async function editAttendee(tripId, attendeeId, oldName, oldAmount){
+      const newAmount = prompt(`تعديل المبلغ المدفوع للمخدوم: ${oldName}`, oldAmount);
+      if(newAmount===null) return;
+      await db.collection("trips").doc(tripId).collection("attendees").doc(attendeeId).update({amount:Number(newAmount)});
+      showNotification("تم تعديل المبلغ بنجاح");
+      loadTripDetails(tripId);
+    }
+
+    // حذف المخدوم
+    async function deleteAttendee(tripId, attendeeId){
+      if(!confirm("هل أنت متأكد من حذف هذا المخدوم؟")) return;
+      await db.collection("trips").doc(tripId).collection("attendees").doc(attendeeId).delete();
+      showNotification("تم حذف المخدوم بنجاح");
+      loadTripDetails(tripId);
+    }
+
+    // حذف الرحلة بالكامل
+    deleteTripBtn.addEventListener("click", async ()=>{
+      const tripId = selectTrip.value;
+      if(!tripId) return showNotification("اختر رحلة أولاً","error");
+      if(!confirm("هل أنت متأكد من حذف هذه الرحلة وكل المسجلين؟")) return;
+
+      // حذف جميع المسجلين أولاً
+      const attendeesSnap = await db.collection("trips").doc(tripId).collection("attendees").get();
+      const batch = db.batch();
+      attendeesSnap.forEach(doc=> batch.delete(doc.ref));
+      await batch.commit();
+
+      // ثم حذف الرحلة نفسها
+      await db.collection("trips").doc(tripId).delete();
+      showNotification("تم حذف الرحلة بنجاح");
+      loadTrips();
+      attendeeTableBody.innerHTML = "";
+      document.getElementById("tripDetails").classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

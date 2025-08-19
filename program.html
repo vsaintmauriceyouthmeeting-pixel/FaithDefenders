@@ -1,0 +1,316 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    
+  <meta charset="UTF-8">
+  <title>نظام إدارة الفقرات</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+    :root {
+      --color1: rgb(250, 238, 180);
+      --color2: rgb(212, 46, 35);
+      --color3: rgb(34, 42, 59);
+      --color4: rgb(170, 123, 76);
+      --color5: rgb(253, 244, 204);
+      --color6: rgb(255, 255, 255);
+    }
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+      background-color: var(--color6);
+      color: var(--color3);
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: var(--color5);
+      padding: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 10;
+      z-index: 1000;
+    }
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: row-reverse;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .header-container img {
+      width: 300px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      margin: 0 10px;
+    }
+    .header-text {
+      font-size: 30px;
+      font-weight: bold;
+      color: var(--color4);
+      white-space: nowrap;
+    }
+    nav.navbar {
+      margin: 20px auto;
+      background-color: var(--color5);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 1200px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav.navbar .links {
+      display: flex;
+      gap: 20px;
+    }
+    nav.navbar a {
+      text-decoration: none;
+      color: var(--color3);
+      font-weight: 600;
+      padding: 5px 10px;
+      transition: color 0.3s;
+    }
+    nav.navbar a:hover {
+      color: var(--color2);
+    }
+    nav.navbar .logout {
+      color: var(--color2);
+      font-weight: bold;
+    }
+    .btn-primary, .btn-secondary {
+      background: var(--color4);
+      color: var(--color6);
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 4px 8px rgb(170, 123, 76);
+    }
+    .btn-primary:hover, .btn-secondary:hover {
+      background: rgb(150, 100, 60);
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    .paragraph-card {
+      background-color: var(--color6);
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      padding: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .paragraph-card:hover {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    textarea, input {
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .menu-dropdown {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      z-index: 10;
+    }
+    .hidden {
+      display: none;
+    }
+    .logout {
+  background: #dc2626 !important; /* أحمر */
+  color: white !important;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+.logout:hover {
+  background: #991b1b !important; /* أغمق عند المرور */
+}
+/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+@media (max-width: 768px) {
+  .header-container, .content-flex, nav.navbar {
+    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
+    margin: auto;   /* تمركز تلقائي */
+  }
+}
+
+  </style>
+</head>
+<body>
+  <!-- الهيدر -->
+  <header>
+    <div class="header-container">
+      <div class="header-text">نظام إدارة الفقرات</div>
+      <img src="logo.png" alt="Logo">
+      <div class="header-text">أجتماع حامي الايمان جامعة وخرجين</div>
+    </div>
+  </header>
+
+  <!-- شريط التنقل -->
+  <nav class="navbar">
+    <div class="links">
+        <a href="home_teacher.html">الرئيسية</a>
+        <a href="crpoems.html">الأشعار</a>
+        <a href="ascenqrcode.html">مسح كود الحضور</a>
+        <a href="program.html">برنامج اليوم</a>
+        <a href="trip.html">إدارة الرحلات</a>
+        <a href="fsaying.html">أقوال الآباء</a>
+        <a href="dataview.html">بيانات المخدومين</a>
+    </div>
+    <a href="index.html" class="logout">تسجيل الخروج</a>
+  </nav>
+
+  <!-- المحتوى -->
+  <div class="container">
+
+    <h2>إضافة فقرة جديدة</h2>
+    <textarea id="paragraphText" placeholder="أدخل نص الفقرة هنا..."></textarea>
+    <input type="text" id="paragraphName" placeholder="اسم الفقرة">
+    <input type="text" id="serverName" placeholder="الخادم المسؤول">
+    <button id="saveBtn" class="btn-primary">حفظ الفقرة</button>
+
+    <div class="mt-6">
+      <h2>فقرات اليوم (<span id="today-date"></span>)</h2>
+      <button id="exportBtn" class="btn-secondary">تصدير البيانات</button>
+      <div id="paragraphs-container" style="margin-top:20px;"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const today = new Date();
+      const dateString = today.toLocaleDateString('ar-EG', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      document.getElementById('today-date').textContent = dateString;
+
+      if (!localStorage.getItem('programData')) {
+        localStorage.setItem('programData', JSON.stringify({
+          paragraphs: [],
+          servers: []
+        }));
+      }
+
+      const paragraphText = document.getElementById('paragraphText');
+      const paragraphName = document.getElementById('paragraphName');
+      const serverName = document.getElementById('serverName');
+      const saveBtn = document.getElementById('saveBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const paragraphsContainer = document.getElementById('paragraphs-container');
+
+      function loadData() {
+        const data = JSON.parse(localStorage.getItem('programData'));
+        const todayParagraphs = data.paragraphs.filter(p => {
+          const pDate = new Date(p.date);
+          return pDate.toDateString() === today.toDateString();
+        });
+
+        paragraphsContainer.innerHTML = '';
+        if (todayParagraphs.length === 0) {
+          paragraphsContainer.innerHTML = '<p>لا توجد فقرات مسجلة لهذا اليوم</p>';
+        } else {
+          todayParagraphs.forEach((p) => {
+            const card = document.createElement('div');
+            card.className = 'paragraph-card';
+            card.innerHTML = `
+              <div class="flex justify-between items-start mb-2">
+                <h3>${p.name}</h3>
+                <div class="relative">
+                  <button onclick="toggleMenu(${p.id})">⋮</button>
+                  <div id="menu-${p.id}" class="menu-dropdown hidden">
+                    <button onclick="deleteParagraph(${p.id})">🗑 حذف</button>
+                  </div>
+                </div>
+              </div>
+              <div><strong>الخادم المسؤول:</strong> ${p.server}</div>
+              <p>${p.text}</p>
+            `;
+            paragraphsContainer.appendChild(card);
+          });
+        }
+      }
+
+      saveBtn.addEventListener('click', function () {
+        const text = paragraphText.value.trim();
+        const name = paragraphName.value.trim();
+        const server = serverName.value.trim();
+
+        if (!text || !name || !server) {
+          alert('الرجاء تعبئة جميع الحقول المطلوبة');
+          return;
+        }
+
+        const data = JSON.parse(localStorage.getItem('programData'));
+        const newParagraph = {
+          id: Date.now(),
+          text,
+          name,
+          server,
+          date: new Date().toISOString()
+        };
+
+        data.paragraphs.push(newParagraph);
+        if (!data.servers.includes(server)) {
+          data.servers.push(server);
+        }
+
+        localStorage.setItem('programData', JSON.stringify(data));
+        paragraphText.value = '';
+        paragraphName.value = '';
+        serverName.value = '';
+        loadData();
+        alert('تم حفظ الفقرة بنجاح');
+      });
+
+      exportBtn.addEventListener('click', function () {
+        const data = JSON.parse(localStorage.getItem('programData'));
+        const today = new Date();
+        const todayParagraphs = data.paragraphs.filter(p => {
+          const pDate = new Date(p.date);
+          return pDate.toDateString() === today.toDateString();
+        });
+        sessionStorage.setItem('exportedParagraphs', JSON.stringify(todayParagraphs));
+        window.open('export.html', '_blank');
+      });
+
+      window.toggleMenu = function (id) {
+        const menu = document.getElementById(`menu-${id}`);
+        document.querySelectorAll('.menu-dropdown').forEach(m => {
+          if (m.id !== `menu-${id}`) m.classList.add('hidden');
+        });
+        if (menu) menu.classList.toggle('hidden');
+      }
+
+      window.deleteParagraph = function (id) {
+        if (!confirm('هل أنت متأكد من حذف الفقرة؟')) return;
+        const data = JSON.parse(localStorage.getItem('programData'));
+        data.paragraphs = data.paragraphs.filter(p => p.id !== id);
+        localStorage.setItem('programData', JSON.stringify(data));
+        loadData();
+      }
+
+      loadData();
+    });
+  </script>
+</body>
+</html>
