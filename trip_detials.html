@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إدارة الرحلات</title>
-  
+
+  <!-- الخطوط والتصميم -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
 
@@ -100,6 +99,7 @@
       font-weight: bold;
       text-decoration: none;
     }
+
     nav.navbar .logout:hover {
       background: #991b1b;
     }
@@ -125,36 +125,29 @@
       margin-bottom: 10px;
     }
 
-    select, table {
+    select {
       width: 100%;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
     }
 
-    table {
-      border-collapse: collapse;
-      background-color: var(--color6);
-      margin-top: 10px;
-    }
+    /* ===== تحسين الاستجابة للشاشات الصغيرة ===== */
+    @media (max-width: 768px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%;
+        margin: auto;
+      }
 
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
+      .header-container img {
+        width: 120px;
+        height: 60px;
+      }
 
-    th {
-      background-color: var(--color1);
+      .header-text {
+        font-size: 18px;
+      }
     }
-    /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
-
   </style>
 </head>
 <body>
@@ -183,6 +176,7 @@
 
   <!-- Content -->
   <div class="content-container">
+    <!-- اختيار الرحلة -->
     <div class="card">
       <label for="selectTrip" class="block font-medium">اختر الرحلة</label>
       <select id="selectTrip">
@@ -190,6 +184,7 @@
       </select>
     </div>
 
+    <!-- تفاصيل الرحلة -->
     <div id="tripDetails" class="card" style="display:none;">
       <div class="grid grid-cols-2 gap-4 mb-4">
         <div>
@@ -205,107 +200,87 @@
           <p id="detailsPrice"></p>
         </div>
         <div>
-          <h4>الأماكن المتاحة:</h4>
-          <p id="detailsAvailable"></p>
+          <h4>حالة الأوتوبيس:</h4>
+          <p id="detailsBusStatus"></p>
         </div>
       </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>اسم الرحلة</th>
-            <th>موعد الرحلة</th>
-            <th>سعر الرحلة</th>
-            <th>اسم المخدوم</th>
-            <th>ركوب الأتوبيس</th>
-          </tr>
-        </thead>
-        <tbody id="attendeeTableBody"></tbody>
-      </table>
+      <div>
+        <h4>وصف الرحلة:</h4>
+        <p id="detailsDescription"></p>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase & Script -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
   <script>
+    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
-  authDomain: "attandaceservice.firebaseapp.com",
-  projectId: "attandaceservice",
-  storageBucket: "attandaceservice.firebasestorage.app",
-  messagingSenderId: "414427228442",
-  appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
-  measurementId: "G-Y1LGFK6JW5"
+      authDomain: "attandaceservice.firebaseapp.com",
+      projectId: "attandaceservice",
+      storageBucket: "attandaceservice.firebasestorage.app",
+      messagingSenderId: "414427228442",
+      appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+      measurementId: "G-Y1LGFK6JW5"
     };
 
+    // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const tripsCollection = db.collection('trips');
 
-    const selectTrip = document.getElementById('selectTrip');
-    const tripDetails = document.getElementById('tripDetails');
-    const attendeeTableBody = document.getElementById('attendeeTableBody');
-    const detailsDate = document.getElementById('detailsDate');
-    const detailsTime = document.getElementById('detailsTime');
-    const detailsPrice = document.getElementById('detailsPrice');
-    const detailsAvailable = document.getElementById('detailsAvailable');
+    // تحميل الرحلات في القائمة
+    const selectTrip = document.getElementById("selectTrip");
+    const tripDetails = document.getElementById("tripDetails");
+    const dateEl = document.getElementById("detailsDate");
+    const timeEl = document.getElementById("detailsTime");
+    const priceEl = document.getElementById("detailsPrice");
+    const busStatusEl = document.getElementById("detailsBusStatus");
+    const descriptionEl = document.getElementById("detailsDescription");
 
-    function loadTrips() {
-      tripsCollection.get().then(querySnapshot => {
-        selectTrip.innerHTML = '<option value="">-- اختر رحلة --</option>';
-        querySnapshot.forEach(doc => {
-          const trip = doc.data();
-          const option = document.createElement('option');
+    async function loadTrips() {
+      try {
+        const snapshot = await db.collection("trips").get();
+        snapshot.forEach(doc => {
+          const option = document.createElement("option");
           option.value = doc.id;
-          option.textContent = `${trip.name} - ${trip.date} - ${trip.time}`;
-          selectTrip.appendChild(option);
+          option.textContent = doc.data().name || "رحلة بدون اسم";
+           selectTrip.appendChild(option);
         });
-      });
+      } catch (error) {
+        console.error("خطأ في تحميل الرحلات:", error);
+      }
     }
 
-    function loadAttendees(tripId) {
-      tripsCollection.doc(tripId).get().then(doc => {
-        if (doc.exists) {
-          const trip = doc.data();
-          const attendees = trip.attendees || {};
-
-          detailsDate.textContent = trip.date || '';
-          detailsTime.textContent = trip.time || '';
-          detailsPrice.textContent = `${trip.price || 0} جنيه`;
-          detailsAvailable.textContent = trip.available || 'غير محدد';
-
-          tripDetails.style.display = 'block';
-          attendeeTableBody.innerHTML = '';
-
-          for (const [key, attendee] of Object.entries(attendees)) {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>${trip.name}</td>
-              <td>${trip.date} ${trip.time}</td>
-              <td>${trip.price} جنيه</td>
-              <td>${attendee.name}</td>
-              <td>${attendee.bus ? 'نعم' : 'لا'}</td>
-            `;
-            attendeeTableBody.appendChild(row);
-          }
-        } else {
-          alert("لم يتم العثور على بيانات الرحلة.");
-        }
-      });
-    }
-
-    selectTrip.addEventListener('change', function () {
+    // عرض تفاصيل الرحلة عند اختيارها
+    selectTrip.addEventListener("change", async () => {
       const tripId = selectTrip.value;
-      if (tripId) {
-        loadAttendees(tripId);
-      } else {
-        tripDetails.style.display = 'none';
-        attendeeTableBody.innerHTML = '';
+      if (!tripId) {
+        tripDetails.style.display = "none";
+        return;
+      }
+      try {
+        const doc = await db.collection("trips").doc(tripId).get();
+        if (doc.exists) {
+          const data = doc.data();
+          dateEl.textContent = data.date || "غير محدد";
+          timeEl.textContent = data.time || "غير محدد";
+          priceEl.textContent = data.price || "غير محدد";
+          busStatusEl.textContent = data.busStatus ? "نعم" : "لا";
+          descriptionEl.textContent = data.desc || "لا يوجد وصف للرحلة.";
+
+          tripDetails.style.display = "block";
+        }
+      } catch (error) {
+        console.error("خطأ أثناء جلب تفاصيل الرحلة:", error);
       }
     });
 
-    window.addEventListener('DOMContentLoaded', loadTrips);
+    // تحميل الرحلات عند فتح الصفحة
+    loadTrips();
   </script>
 </body>
 </html>
