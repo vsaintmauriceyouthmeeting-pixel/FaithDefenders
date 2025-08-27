@@ -1,10 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    
   <meta charset="UTF-8">
   <title>نظام إدارة أقوال الآباء</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 
   <!-- (اختياري) مكتبة Excel لو حبيتي تصدّري لملف xlsx -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -108,7 +110,6 @@
       padding: 20px;
     }
 
-    /* عناصر الإدخال */
     .input, textarea {
       width: 100%;
       border: 1px solid #ccc;
@@ -120,7 +121,6 @@
     }
     textarea { min-height: 120px; }
 
-    /* جدول موحّد مثل جدول الحضور */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -135,7 +135,6 @@
       background-color: var(--color5);
     }
 
-    /* شارة حالة التصدير */
     .badge {
       display: inline-block;
       padding: 4px 10px;
@@ -150,26 +149,23 @@
       border: 1px solid rgba(170,123,76,0.35);
     }
     .logout {
-  background: #dc2626 !important; /* أحمر */
-  color: white !important;
-  padding: 6px 14px;
-  border-radius: 8px;
-}
-.logout:hover {
-  background: #991b1b !important; /* أغمق عند المرور */
-}
-/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
-
+      background: #dc2626 !important;
+      color: white !important;
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    .logout:hover {
+      background: #991b1b !important;
+    }
+    @media (max-width: 768px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%;
+        margin: auto;
+      }
+    }
   </style>
 </head>
 <body>
-
   <!-- الهيدر -->
   <header>
     <div class="header-container">
@@ -179,16 +175,16 @@
     </div>
   </header>
 
-  <!-- شريط التنقل (نفس الموجود في الصفحة المحفوظة) -->
+  <!-- شريط التنقل -->
   <nav class="navbar">
     <div class="links">
-        <a href="home_teacher.html">الرئيسية</a>
-        <a href="crpoems.html">الأشعار</a>
-        <a href="ascenqrcode.html">مسح كود الحضور</a>
-        <a href="program.html">برنامج اليوم</a>
-        <a href="trip.html">إدارة الرحلات</a>
-        <a href="fsaying.html">أقوال الآباء</a>
-        <a href="dataview.html">بيانات المخدومين</a>
+      <a href="home_teacher.html">الرئيسية</a>
+      <a href="crpoems.html">الأشعار</a>
+      <a href="ascenqrcode.html">مسح كود الحضور</a>
+      <a href="program.html">برنامج اليوم</a>
+      <a href="trip.html">إدارة الرحلات</a>
+      <a href="fsaying.html">أقوال الآباء</a>
+      <a href="dataview.html">بيانات المخدومين</a>
     </div>
     <a href="index.html" class="logout">تسجيل الخروج</a>
   </nav>
@@ -223,153 +219,149 @@
     </table>
   </div>
 
-  <script>
-  const STORAGE_KEY = 'fatherQuotes';
+  <script type="module">
+    // ======== إعداد Firebase ========
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } 
+      from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-const quoteTextEl = document.getElementById('quoteText');
-const authorNameEl = document.getElementById('authorName');
-const saveBtn = document.getElementById('saveBtn');
-const clearBtn = document.getElementById('clearBtn');
-const exportBtn = document.getElementById('exportBtn');
-const messageEl = document.getElementById('message');
-const tableBody = document.querySelector('#quotesTable tbody');
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+  authDomain: "attandaceservice.firebaseapp.com",
+  projectId: "attandaceservice",
+  storageBucket: "attandaceservice.firebasestorage.app",
+  messagingSenderId: "414427228442",
+  appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+  measurementId: "G-Y1LGFK6JW5"
+    };
 
-function showMsg(txt, ok=true) {
-  messageEl.textContent = txt;
-  messageEl.style.color = ok ? 'green' : 'crimson';
-  messageEl.style.display = 'block';
-  setTimeout(() => messageEl.style.display = 'none', 2000);
-}
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const quotesCol = collection(db, "fatherQuotes");
 
-function readQuotes() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-  catch { return []; }
-}
-function writeQuotes(arr) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-}
+    const quoteTextEl = document.getElementById('quoteText');
+    const authorNameEl = document.getElementById('authorName');
+    const saveBtn = document.getElementById('saveBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const messageEl = document.getElementById('message');
+    const tableBody = document.querySelector('#quotesTable tbody');
 
-function formatDate(iso) {
-  const d = new Date(iso);
-  const pad = n => String(n).padStart(2,'0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+    function showMsg(txt, ok=true) {
+      messageEl.textContent = txt;
+      messageEl.style.color = ok ? 'green' : 'crimson';
+      messageEl.style.display = 'block';
+      setTimeout(() => messageEl.style.display = 'none', 2000);
+    }
 
-function renderTable() {
-  const quotes = readQuotes();
-  tableBody.innerHTML = '';
+    function formatDate(iso) {
+      const d = new Date(iso);
+      const pad = n => String(n).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
 
-  if (!quotes.length) {
-    tableBody.innerHTML = `<tr><td colspan="5">لا توجد أقوال مسجلة حاليًا.</td></tr>`;
-    return;
-  }
+    async function renderTable() {
+      tableBody.innerHTML = '';
+      const snapshot = await getDocs(quotesCol);
+      const quotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                      .sort((a,b) => (b.date || '').localeCompare(a.date || ''));
 
-  quotes
-    .sort((a,b) => (b.date || '').localeCompare(a.date || ''))
-    .forEach(q => {
-      const tr = document.createElement('tr');
+      if (!quotes.length) {
+        tableBody.innerHTML = `<tr><td colspan="5">لا توجد أقوال مسجلة حاليًا.</td></tr>`;
+        return;
+      }
 
-      const tdText = document.createElement('td');
-      tdText.textContent = q.text || '';
-      tr.appendChild(tdText);
+      quotes.forEach(q => {
+        const tr = document.createElement('tr');
 
-      const tdAuthor = document.createElement('td');
-      tdAuthor.textContent = q.author || '';
-      tr.appendChild(tdAuthor);
+        const tdText = document.createElement('td');
+        tdText.textContent = q.text || '';
+        tr.appendChild(tdText);
 
-      const tdDate = document.createElement('td');
-      tdDate.textContent = q.date ? formatDate(q.date) : '';
-      tr.appendChild(tdDate);
+        const tdAuthor = document.createElement('td');
+        tdAuthor.textContent = q.author || '';
+        tr.appendChild(tdAuthor);
 
-      const tdState = document.createElement('td');
-      const badge = document.createElement('span');
-      badge.className = 'badge' + (q.exported ? ' exported' : '');
-      badge.textContent = q.exported ? 'معلّم للتصدير' : 'غير معلّم';
-      tdState.appendChild(badge);
-      tr.appendChild(tdState);
+        const tdDate = document.createElement('td');
+        tdDate.textContent = q.date ? formatDate(q.date) : '';
+        tr.appendChild(tdDate);
 
-      const tdActions = document.createElement('td');
-      tdActions.style.display = 'flex';
-      tdActions.style.gap = '8px';
-      tdActions.style.justifyContent = 'center';
+        const tdState = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = 'badge' + (q.exported ? ' exported' : '');
+        badge.textContent = q.exported ? 'معلّم للتصدير' : 'غير معلّم';
+        tdState.appendChild(badge);
+        tr.appendChild(tdState);
 
-      const btnToggle = document.createElement('button');
-      btnToggle.className = 'btn-secondary';
-      btnToggle.textContent = q.exported ? 'إلغاء التصدير' : 'تحديد للتصدير';
-      btnToggle.onclick = () => toggleExport(q.id);
+        const tdActions = document.createElement('td');
+        tdActions.style.display = 'flex';
+        tdActions.style.gap = '8px';
+        tdActions.style.justifyContent = 'center';
 
-      const btnDelete = document.createElement('button');
-      btnDelete.className = 'btn-secondary';
-      btnDelete.textContent = 'حذف';
-      btnDelete.onclick = () => deleteQuote(q.id);
+        const btnToggle = document.createElement('button');
+        btnToggle.className = 'btn-secondary';
+        btnToggle.textContent = q.exported ? 'إلغاء التصدير' : 'تحديد للتصدير';
+        btnToggle.onclick = async () => {
+          await updateDoc(doc(db, "fatherQuotes", q.id), { exported: !q.exported });
+          renderTable();
+        };
 
-      tdActions.appendChild(btnToggle);
-      tdActions.appendChild(btnDelete);
-      tr.appendChild(tdActions);
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'btn-secondary';
+        btnDelete.textContent = 'حذف';
+        btnDelete.onclick = async () => {
+          if (!confirm('هل أنت متأكد من حذف هذا القول؟')) return;
+          await deleteDoc(doc(db, "fatherQuotes", q.id));
+          renderTable();
+          showMsg('تم حذف القول');
+        };
 
-      tableBody.appendChild(tr);
-    });
-}
+        tdActions.appendChild(btnToggle);
+        tdActions.appendChild(btnDelete);
+        tr.appendChild(tdActions);
+        tableBody.appendChild(tr);
+      });
+    }
 
-function addQuote() {
-  const text = (quoteTextEl.value || '').trim();
-  const author = (authorNameEl.value || '').trim();
-  if (!text || !author) return showMsg('يرجى تعبئة كل الحقول', false);
+    async function addQuote() {
+      const text = (quoteTextEl.value || '').trim();
+      const author = (authorNameEl.value || '').trim();
+      if (!text || !author) return showMsg('يرجى تعبئة كل الحقول', false);
 
-  const quotes = readQuotes();
-  const newQuote = {
-    id: Date.now(),
-    text, author,
-    date: new Date().toISOString(),
-    exported: false
-  };
-  quotes.push(newQuote);
-  writeQuotes(quotes);
-  quoteTextEl.value = '';
-  authorNameEl.value = '';
-  renderTable();
-  showMsg('تم حفظ القول بنجاح');
-}
+      await addDoc(quotesCol, {
+        text,
+        author,
+        date: new Date().toISOString(),
+        exported: false
+      });
 
-function deleteQuote(id) {
-  if (!confirm('هل أنت متأكد من حذف هذا القول؟')) return;
-  const quotes = readQuotes().filter(q => q.id !== id);
-  writeQuotes(quotes);
-  renderTable();
-  showMsg('تم حذف القول');
-}
+      quoteTextEl.value = '';
+      authorNameEl.value = '';
+      renderTable();
+      showMsg('تم حفظ القول بنجاح');
+    }
 
-function toggleExport(id) {
-  const quotes = readQuotes().map(q => q.id === id ? { ...q, exported: !q.exported } : q);
-  writeQuotes(quotes);
-  renderTable();
-}
+    function clearInputs() {
+      quoteTextEl.value = '';
+      authorNameEl.value = '';
+    }
 
-function clearInputs() {
-  quoteTextEl.value = '';
-  authorNameEl.value = '';
-}
+    async function exportMarkedToExcel() {
+      const snapshot = await getDocs(quotesCol);
+      const quotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                                  .filter(q => q.exported);
 
-// ==== التعديل: عرض الأقوال المُعلّمة في صفحة جديدة بدل Excel ====
-function exportMarkedToExcel() {
-  const quotes = readQuotes().filter(q => q.exported);
-  if (!quotes.length) return showMsg('لا توجد أقوال معلّمة للتصدير', false);
+      if (!quotes.length) return showMsg('لا توجد أقوال معلّمة للتصدير', false);
 
-  // حفظ البيانات مؤقتًا في sessionStorage
-  sessionStorage.setItem('exportedQuotes', JSON.stringify(quotes));
+      sessionStorage.setItem('exportedQuotes', JSON.stringify(quotes));
+      window.open('export-father-quotes.html', '_blank');
+    }
 
-  // فتح صفحة العرض
-  window.open('export-father-quotes.html', '_blank');
-}
+    saveBtn.addEventListener('click', addQuote);
+    clearBtn.addEventListener('click', clearInputs);
+    exportBtn.addEventListener('click', exportMarkedToExcel);
 
-// ربط الأحداث
-saveBtn.addEventListener('click', addQuote);
-clearBtn.addEventListener('click', clearInputs);
-exportBtn.addEventListener('click', exportMarkedToExcel);
-
-// تحميل أولي
-document.addEventListener('DOMContentLoaded', renderTable);
-renderTable();
+    document.addEventListener('DOMContentLoaded', renderTable);
   </script>
 </body>
 </html>
