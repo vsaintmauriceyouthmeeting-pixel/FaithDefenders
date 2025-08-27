@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -136,14 +135,14 @@
       display: flex;
       justify-content: space-between;
     }
-    /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
 
+    /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+    @media (max-width: 768px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%;
+        margin: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -176,31 +175,60 @@
     <div id="exportedQuotes"></div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const container = document.getElementById('exportedQuotes');
+  <!-- Firebase Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-      const quotes = JSON.parse(localStorage.getItem('fatherQuotes') || '[]');
-      const exportedQuotes = quotes.filter(q => q.exported);
+    // إعدادات Firebase - استبدلي القيم بقيم مشروعك
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+  authDomain: "attandaceservice.firebaseapp.com",
+  projectId: "attandaceservice",
+  storageBucket: "attandaceservice.firebasestorage.app",
+  messagingSenderId: "414427228442",
+  appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+  measurementId: "G-Y1LGFK6JW5"
+    };
 
-      if (exportedQuotes.length === 0) {
-        container.innerHTML = '<p>⚠ لا توجد أقوال مُعلّمة للتصدير.</p>';
-        return;
+    // تهيئة Firebase و Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const container = document.getElementById('exportedQuotes');
+
+    async function fetchExportedQuotes() {
+      try {
+        // استعلام Firestore: الأقوال المعلّمة فقط
+        const q = query(collection(db, "fatherQuotes"), where("exported", "==", true));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          container.innerHTML = '<p>⚠ لا توجد أقوال مُعلّمة للتصدير.</p>';
+          return;
+        }
+
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'quote-card';
+          card.innerHTML = `
+            <p>❝ ${data.text || "—"} ❞</p>
+            <div class="quote-meta">
+              <span>✍️ الخادم: ${data.author || "غير معروف"}</span>
+              <span>${data.date || ""}</span>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error("حدث خطأ أثناء جلب البيانات:", error);
+        container.innerHTML = '<p style="color:red;">⚠ حدث خطأ أثناء تحميل البيانات.</p>';
       }
+    }
 
-      exportedQuotes.forEach(q => {
-        const card = document.createElement('div');
-        card.className = 'quote-card';
-        card.innerHTML = `
-          <p>❝ ${q.text} ❞</p>
-          <div class="quote-meta">
-            <span>✍️ الخادم: ${q.author}</span>
-            <span>${q.date}</span>
-          </div>
-        `;
-        container.appendChild(card);
-      });ش
-    });
+    // جلب البيانات عند تحميل الصفحة
+    fetchExportedQuotes();
   </script>
 </body>
 </html>
