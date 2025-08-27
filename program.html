@@ -1,10 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    
   <meta charset="UTF-8">
   <title>نظام إدارة الفقرات</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
@@ -135,26 +137,23 @@
       display: none;
     }
     .logout {
-  background: #dc2626 !important; /* أحمر */
-  color: white !important;
-  padding: 6px 14px;
-  border-radius: 8px;
-}
-.logout:hover {
-  background: #991b1b !important; /* أغمق عند المرور */
-}
-/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
-
+      background: #dc2626 !important;
+      color: white !important;
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    .logout:hover {
+      background: #991b1b !important;
+    }
+    @media (max-width: 768px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%;
+        margin: auto;
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- الهيدر -->
   <header>
     <div class="header-container">
       <div class="header-text">نظام إدارة الفقرات</div>
@@ -163,23 +162,20 @@
     </div>
   </header>
 
-  <!-- شريط التنقل -->
   <nav class="navbar">
     <div class="links">
-        <a href="home_teacher.html">الرئيسية</a>
-        <a href="crpoems.html">الأشعار</a>
-        <a href="ascenqrcode.html">مسح كود الحضور</a>
-        <a href="program.html">برنامج اليوم</a>
-        <a href="trip.html">إدارة الرحلات</a>
-        <a href="fsaying.html">أقوال الآباء</a>
-        <a href="dataview.html">بيانات المخدومين</a>
+      <a href="home_teacher.html">الرئيسية</a>
+      <a href="crpoems.html">الأشعار</a>
+      <a href="ascenqrcode.html">مسح كود الحضور</a>
+      <a href="program.html">برنامج اليوم</a>
+      <a href="trip.html">إدارة الرحلات</a>
+      <a href="fsaying.html">أقوال الآباء</a>
+      <a href="dataview.html">بيانات المخدومين</a>
     </div>
     <a href="index.html" class="logout">تسجيل الخروج</a>
   </nav>
 
-  <!-- المحتوى -->
   <div class="container">
-
     <h2>إضافة فقرة جديدة</h2>
     <textarea id="paragraphText" placeholder="أدخل نص الفقرة هنا..."></textarea>
     <input type="text" id="paragraphName" placeholder="اسم الفقرة">
@@ -193,124 +189,102 @@
     </div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const today = new Date();
-      const dateString = today.toLocaleDateString('ar-EG', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-      document.getElementById('today-date').textContent = dateString;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-      if (!localStorage.getItem('programData')) {
-        localStorage.setItem('programData', JSON.stringify({
-          paragraphs: [],
-          servers: []
-        }));
-      }
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+      authDomain: "attandaceservice.firebaseapp.com",
+      projectId: "attandaceservice",
+      storageBucket: "attandaceservice.firebasestorage.app",
+      messagingSenderId: "414427228442",
+      appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+      measurementId: "G-Y1LGFK6JW5"
+    };
 
-      const paragraphText = document.getElementById('paragraphText');
-      const paragraphName = document.getElementById('paragraphName');
-      const serverName = document.getElementById('serverName');
-      const saveBtn = document.getElementById('saveBtn');
-      const exportBtn = document.getElementById('exportBtn');
-      const paragraphsContainer = document.getElementById('paragraphs-container');
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-      function loadData() {
-        const data = JSON.parse(localStorage.getItem('programData'));
-        const todayParagraphs = data.paragraphs.filter(p => {
-          const pDate = new Date(p.date);
-          return pDate.toDateString() === today.toDateString();
-        });
-
-        paragraphsContainer.innerHTML = '';
-        if (todayParagraphs.length === 0) {
-          paragraphsContainer.innerHTML = '<p>لا توجد فقرات مسجلة لهذا اليوم</p>';
-        } else {
-          todayParagraphs.forEach((p) => {
-            const card = document.createElement('div');
-            card.className = 'paragraph-card';
-            card.innerHTML = `
-              <div class="flex justify-between items-start mb-2">
-                <h3>${p.name}</h3>
-                <div class="relative">
-                  <button onclick="toggleMenu(${p.id})">⋮</button>
-                  <div id="menu-${p.id}" class="menu-dropdown hidden">
-                    <button onclick="deleteParagraph(${p.id})">🗑 حذف</button>
-                  </div>
-                </div>
-              </div>
-              <div><strong>الخادم المسؤول:</strong> ${p.server}</div>
-              <p>${p.text}</p>
-            `;
-            paragraphsContainer.appendChild(card);
-          });
-        }
-      }
-
-      saveBtn.addEventListener('click', function () {
-        const text = paragraphText.value.trim();
-        const name = paragraphName.value.trim();
-        const server = serverName.value.trim();
-
-        if (!text || !name || !server) {
-          alert('الرجاء تعبئة جميع الحقول المطلوبة');
-          return;
-        }
-
-        const data = JSON.parse(localStorage.getItem('programData'));
-        const newParagraph = {
-          id: Date.now(),
-          text,
-          name,
-          server,
-          date: new Date().toISOString()
-        };
-
-        data.paragraphs.push(newParagraph);
-        if (!data.servers.includes(server)) {
-          data.servers.push(server);
-        }
-
-        localStorage.setItem('programData', JSON.stringify(data));
-        paragraphText.value = '';
-        paragraphName.value = '';
-        serverName.value = '';
-        loadData();
-        alert('تم حفظ الفقرة بنجاح');
-      });
-
-      exportBtn.addEventListener('click', function () {
-        const data = JSON.parse(localStorage.getItem('programData'));
-        const today = new Date();
-        const todayParagraphs = data.paragraphs.filter(p => {
-          const pDate = new Date(p.date);
-          return pDate.toDateString() === today.toDateString();
-        });
-        sessionStorage.setItem('exportedParagraphs', JSON.stringify(todayParagraphs));
-        window.open('export.html', '_blank');
-      });
-
-      window.toggleMenu = function (id) {
-        const menu = document.getElementById(`menu-${id}`);
-        document.querySelectorAll('.menu-dropdown').forEach(m => {
-          if (m.id !== `menu-${id}`) m.classList.add('hidden');
-        });
-        if (menu) menu.classList.toggle('hidden');
-      }
-
-      window.deleteParagraph = function (id) {
-        if (!confirm('هل أنت متأكد من حذف الفقرة؟')) return;
-        const data = JSON.parse(localStorage.getItem('programData'));
-        data.paragraphs = data.paragraphs.filter(p => p.id !== id);
-        localStorage.setItem('programData', JSON.stringify(data));
-        loadData();
-      }
-
-      loadData();
+    const today = new Date();
+    const dateString = today.toLocaleDateString('ar-EG', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
+    document.getElementById('today-date').textContent = dateString;
+
+    const paragraphText = document.getElementById('paragraphText');
+    const paragraphName = document.getElementById('paragraphName');
+    const serverName = document.getElementById('serverName');
+    const saveBtn = document.getElementById('saveBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const paragraphsContainer = document.getElementById('paragraphs-container');
+
+    async function loadData() {
+      paragraphsContainer.innerHTML = '';
+      const q = query(collection(db, "paragraphs"), where("date", "==", today.toDateString()));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        paragraphsContainer.innerHTML = '<p>لا توجد فقرات مسجلة لهذا اليوم</p>';
+      } else {
+        querySnapshot.forEach((docSnap) => {
+          const p = docSnap.data();
+          const card = document.createElement('div');
+          card.className = 'paragraph-card';
+          card.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+              <h3>${p.name}</h3>
+              <div class="relative">
+                <button onclick="deleteParagraph('${docSnap.id}')">🗑 حذف</button>
+              </div>
+            </div>
+            <div><strong>الخادم المسؤول:</strong> ${p.server}</div>
+            <p>${p.text}</p>
+          `;
+          paragraphsContainer.appendChild(card);
+        });
+      }
+    }
+
+    saveBtn.addEventListener('click', async function () {
+      const text = paragraphText.value.trim();
+      const name = paragraphName.value.trim();
+      const server = serverName.value.trim();
+
+      if (!text || !name || !server) {
+        alert('الرجاء تعبئة جميع الحقول المطلوبة');
+        return;
+      }
+
+      await addDoc(collection(db, "paragraphs"), {
+        text,
+        name,
+        server,
+        date: today.toDateString()
+      });
+
+      paragraphText.value = '';
+      paragraphName.value = '';
+      serverName.value = '';
+      loadData();
+      alert('تم حفظ الفقرة بنجاح');
+    });
+
+    exportBtn.addEventListener('click', async function () {
+      const q = query(collection(db, "paragraphs"), where("date", "==", today.toDateString()));
+      const querySnapshot = await getDocs(q);
+      const todayParagraphs = querySnapshot.docs.map(doc => doc.data());
+      sessionStorage.setItem('exportedParagraphs', JSON.stringify(todayParagraphs));
+      window.open('export.html', '_blank');
+    });
+
+    window.deleteParagraph = async function (id) {
+      if (!confirm('هل أنت متأكد من حذف الفقرة؟')) return;
+      await deleteDoc(doc(db, "paragraphs", id));
+      loadData();
+    }
+
+    loadData();
   </script>
 </body>
 </html>
