@@ -1,10 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    
   <meta charset="UTF-8" />
   <title>فقرات اليوم</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
 
@@ -25,7 +28,6 @@
       padding: 0;
     }
 
-    /* ===== Header ===== */
     header {
       background-color: var(--color5);
       padding: 10px;
@@ -60,7 +62,6 @@
       white-space: nowrap;
     }
 
-    /* ===== Navbar ===== */
     nav.navbar {
       margin: 20px auto;
       background-color: var(--color5);
@@ -102,7 +103,6 @@
       background: #991b1b;
     }
 
-    /* ===== Content ===== */
     .content {
       max-width: 1200px;
       margin: 40px auto;
@@ -137,14 +137,13 @@
       border-top: 1px solid #ccc;
       padding-top: 8px;
     }
-    /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
 
+    @media (max-width: 768px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%;
+        margin: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -177,30 +176,65 @@
     <div id="exported-paragraphs"></div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const container = document.getElementById('exported-paragraphs');
-      const data = JSON.parse(sessionStorage.getItem('exportedParagraphs') || '[]');
+  <script type="module">
+    // استيراد Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-      if (data.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500">لا توجد فقرات مسجلة اليوم</p>';
-      } else {
-        data.forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'paragraph-card';
-          card.innerHTML = `
-            <h2 class="text-xl font-bold mb-2">${p.name}</h2>
-            <p>${p.text}</p>
-            <div class="paragraph-meta">
-              ✍️ <strong>الخادم:</strong> ${p.server} <br>
-              📅 <strong>التاريخ:</strong> ${new Date(p.date).toLocaleString('ar-EG')}
-            </div>
-          `;
-          container.appendChild(card);
-        });
+    // إعدادات Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+      authDomain: "attandaceservice.firebaseapp.com",
+      projectId: "attandaceservice",
+      storageBucket: "attandaceservice.firebasestorage.app",
+      messagingSenderId: "414427228442",
+      appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+      measurementId: "G-Y1LGFK6JW5"
+    };
+
+    // تهيئة التطبيق وقاعدة البيانات
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // مراجع العناصر
+    const container = document.getElementById('exported-paragraphs');
+    const today = new Date().toDateString();
+
+    // تحميل بيانات اليوم من Firestore
+    async function loadParagraphs() {
+      container.innerHTML = '<p style="text-align:center;color:gray;">جاري التحميل...</p>';
+
+      try {
+        const q = query(collection(db, "paragraphs"), where("date", "==", today));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          container.innerHTML = '<p style="text-align:center;color:gray;">لا توجد فقرات مسجلة اليوم</p>';
+        } else {
+          container.innerHTML = '';
+          querySnapshot.forEach(docSnap => {
+            const p = docSnap.data();
+            const card = document.createElement('div');
+            card.className = 'paragraph-card';
+            card.innerHTML = `
+              <h2>${p.name}</h2>
+              <p>${p.text}</p>
+              <div class="paragraph-meta">
+                ✍️ <strong>الخادم:</strong> ${p.server} <br>
+                📅 <strong>التاريخ:</strong> ${p.date}
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        }
+      } catch (error) {
+        console.error("حدث خطأ أثناء تحميل البيانات:", error);
+        container.innerHTML = '<p style="text-align:center;color:red;">حدث خطأ أثناء تحميل البيانات</p>';
       }
-    });
+    }
+
+    // استدعاء الدالة عند تحميل الصفحة
+    loadParagraphs();
   </script>
 </body>
 </html>
- 
