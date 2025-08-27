@@ -1,9 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>الأشعار المصدّرة</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
 
@@ -134,14 +135,14 @@
       margin-top: 10px;
       text-align: left;
     }
-    /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
 
+    /* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
+    @media (max-width: 768px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%;
+        margin: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -157,7 +158,7 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="links">
-        <a href="home_student.html">الرئيسية</a>
+      <a href="home_student.html">الرئيسية</a>
       <a href="export_poems.html">الأشعار</a>
       <a href="rigester.html">مسح كود الحضور</a>
       <a href="export.html">برنامج اليوم</a>
@@ -174,28 +175,59 @@
     <div id="exportedPoems"></div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const container = document.getElementById('exportedPoems');
+  <script type="module">
+    // ================== 1. إعداد Firebase ==================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } 
+      from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
-      const exportedPoems = poems.filter(p => p.exported);
+    // ضع هنا إعدادات Firebase الخاصة بك
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+  authDomain: "attandaceservice.firebaseapp.com",
+  projectId: "attandaceservice",
+  storageBucket: "attandaceservice.firebasestorage.app",
+  messagingSenderId: "414427228442",
+  appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+  measurementId: "G-Y1LGFK6JW5"
+    };
 
-      if (exportedPoems.length === 0) {
-        container.innerHTML = '<p>لا توجد أشعار مصدّرة للعرض.</p>';
-        return;
+    // 2. تهيئة التطبيق وقاعدة البيانات
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 3. مرجع العناصر
+    const container = document.getElementById('exportedPoems');
+
+    // 4. جلب الأشعار المصدّرة فقط من Firestore
+    async function fetchExportedPoems() {
+      try {
+        const poemsRef = collection(db, "poems");
+        const q = query(poemsRef, where("exported", "==", true));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          container.innerHTML = '<p>لا توجد أشعار مصدّرة للعرض.</p>';
+          return;
+        }
+
+        querySnapshot.forEach(doc => {
+          const poem = doc.data();
+          const card = document.createElement('div');
+          card.className = 'poem-card';
+          card.innerHTML = `
+            <p>"${poem.text}"</p>
+            <p class="poem-author">✍️ الكاتب: ${poem.author}</p>
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error("خطأ أثناء جلب البيانات:", error);
+        container.innerHTML = '<p>حدث خطأ أثناء تحميل الأشعار.</p>';
       }
+    }
 
-      exportedPoems.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'poem-card';
-        card.innerHTML = `
-          <p>"${p.text}"</p>
-          <p class="poem-author">✍️ الكاتب: ${p.author}</p>
-        `;
-        container.appendChild(card);
-      });
-    });
+    fetchExportedPoems();
   </script>
 </body>
 </html>
