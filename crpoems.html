@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -8,6 +7,111 @@
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDK (v10+) -->
+  <script type="module">
+    // === 1. استيراد مكتبات Firebase ===
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // === 2. إعدادات Firebase ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcGNzxF_OBCCQi9kO7y3NsMFrCXe_LBz0",
+      authDomain: "attandaceservice.firebaseapp.com",
+      projectId: "attandaceservice",
+      storageBucket: "attandaceservice.firebasestorage.app",
+      messagingSenderId: "414427228442",
+      appId: "1:414427228442:web:3f59de5caa4c35a71024a3",
+      measurementId: "G-Y1LGFK6JW5"
+    };
+
+    // === 3. تهيئة Firebase و Firestore ===
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // === 4. تحديد عناصر HTML ===
+    const poemText = document.getElementById('poemText');
+    const authorName = document.getElementById('authorName');
+    const saveBtn = document.getElementById('saveBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const poemsContainer = document.getElementById('poemsContainer');
+
+    // === 5. تحميل الأشعار من Firestore ===
+    async function loadPoems() {
+      poemsContainer.innerHTML = '';
+      const q = query(collection(db, "poems"), orderBy("date", "desc"));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        poemsContainer.innerHTML = '<p>لا توجد أشعار مسجلة حاليًا.</p>';
+        return;
+      }
+
+      querySnapshot.forEach((docSnap) => {
+        const p = docSnap.data();
+        const card = document.createElement('div');
+        card.className = 'paragraph-card';
+        card.innerHTML = `
+          <p class="mb-2">${p.text}</p>
+          <p class="text-sm text-gray-600">الكاتب: ${p.author}</p>
+          <div class="flex gap-2 mt-2">
+            <button onclick="deletePoem('${docSnap.id}')" class="btn">حذف</button>
+            <button onclick="toggleExport('${docSnap.id}', ${p.exported})" class="btn">
+              ${p.exported ? 'إلغاء التصدير' : 'تصدير'}
+            </button>
+          </div>
+        `;
+        poemsContainer.appendChild(card);
+      });
+    }
+
+    // === 6. إضافة شعر جديد ===
+    saveBtn.addEventListener('click', async () => {
+      const text = poemText.value.trim();
+      const author = authorName.value.trim();
+      if (!text || !author) return alert('يرجى تعبئة كل الحقول');
+
+      await addDoc(collection(db, "poems"), {
+        text,
+        author,
+        date: new Date(),
+        exported: false
+      });
+
+      poemText.value = '';
+      authorName.value = '';
+      loadPoems();
+    });
+
+    // === 7. حذف شعر ===
+    window.deletePoem = async function (id) {
+      if (!confirm('هل أنت متأكد من حذف هذا الشعر؟')) return;
+      await deleteDoc(doc(db, "poems", id));
+      loadPoems();
+    };
+
+    // === 8. تبديل حالة التصدير ===
+    window.toggleExport = async function (id, currentStatus) {
+      await updateDoc(doc(db, "poems", id), {
+        exported: !currentStatus
+      });
+      loadPoems();
+    };
+
+    // === 9. عرض الأشعار المصدّرة ===
+    exportBtn.addEventListener('click', async () => {
+      const q = query(collection(db, "poems"), where("exported", "==", true));
+      const querySnapshot = await getDocs(q);
+      const exportedPoems = [];
+      querySnapshot.forEach((docSnap) => exportedPoems.push(docSnap.data()));
+
+      sessionStorage.setItem('exportedPoems', JSON.stringify(exportedPoems));
+      window.open('export-poems.html', '_blank');
+    });
+
+    // === 10. تحميل الأشعار عند تشغيل الصفحة ===
+    loadPoems();
+  </script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
@@ -83,8 +187,14 @@
       color: var(--color2);
     }
     nav.navbar .logout {
-      color: var(--color2);
+      color: var(--color6);
+      background-color: var(--color2);
+      padding: 6px 14px;
+      border-radius: 8px;
       font-weight: bold;
+    }
+    nav.navbar .logout:hover {
+      background: #991b1b;
     }
     .btn {
       background: var(--color4);
@@ -113,23 +223,12 @@
       margin-bottom: 15px;
       padding: 15px;
     }
-    .logout {
-  background: #dc2626 !important; /* أحمر */
-  color: white !important;
-  padding: 6px 14px;
-  border-radius: 8px;
-}
-.logout:hover {
-  background: #991b1b !important; /* أغمق عند المرور */
-}
-/* ===== تعديل المساحة للشاشات الصغيرة بدون تغيير التصميم ===== */
-@media (max-width: 768px) {
-  .header-container, .content-flex, nav.navbar {
-    max-width: 95%; /* خلي المحتوى قريب من حواف الشاشة */
-    margin: auto;   /* تمركز تلقائي */
-  }
-}
-
+    @media (max-width: 768px) {
+      .header-container, .content-flex, nav.navbar {
+        max-width: 95%;
+        margin: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -146,13 +245,13 @@
   <!-- شريط التنقل -->
   <nav class="navbar">
     <div class="links">
-        <a href="home_teacher.html">الرئيسية</a>
-        <a href="crpoems.html">الأشعار</a>
-        <a href="ascenqrcode.html">مسح كود الحضور</a>
-        <a href="program.html">برنامج اليوم</a>
-        <a href="trip.html">إدارة الرحلات</a>
-        <a href="fsaying.html">أقوال الآباء</a>
-        <a href="dataview.html">بيانات المخدومين</a>
+      <a href="home_teacher.html">الرئيسية</a>
+      <a href="crpoems.html">الأشعار</a>
+      <a href="ascenqrcode.html">مسح كود الحضور</a>
+      <a href="program.html">برنامج اليوم</a>
+      <a href="trip.html">إدارة الرحلات</a>
+      <a href="fsaying.html">أقوال الآباء</a>
+      <a href="dataview.html">بيانات المخدومين</a>
     </div>
     <a href="index.html" class="logout">تسجيل الخروج</a>
   </nav>
@@ -168,74 +267,5 @@
     <button id="exportBtn" class="btn mb-4">عرض الأشعار المصدّرة</button>
     <div id="poemsContainer"></div>
   </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const poemText = document.getElementById('poemText');
-    const authorName = document.getElementById('authorName');
-    const saveBtn = document.getElementById('saveBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const poemsContainer = document.getElementById('poemsContainer');
-
-    function loadPoems() {
-      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
-      poemsContainer.innerHTML = '';
-      if (poems.length === 0) {
-        poemsContainer.innerHTML = '<p>لا توجد أشعار مسجلة حاليًا.</p>';
-        return;
-      }
-      poems.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'paragraph-card';
-        card.innerHTML = `
-          <p class="mb-2">${p.text}</p>
-          <p class="text-sm text-gray-600">الكاتب: ${p.author}</p>
-          <div class="flex gap-2 mt-2">
-            <button onclick="deletePoem(${p.id})" class="btn">حذف</button>
-            <button onclick="toggleExport(${p.id})" class="btn">${p.exported ? 'إلغاء التصدير' : 'تصدير'}</button>
-          </div>
-        `;
-        poemsContainer.appendChild(card);
-      });
-    }
-
-    saveBtn.addEventListener('click', () => {
-      const text = poemText.value.trim();
-      const author = authorName.value.trim();
-      if (!text || !author) return alert('يرجى تعبئة كل الحقول');
-      const newPoem = { id: Date.now(), text, author, date: new Date().toISOString(), exported: false };
-      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
-      poems.push(newPoem);
-      localStorage.setItem('poemsList', JSON.stringify(poems));
-      poemText.value = '';
-      authorName.value = '';
-      loadPoems();
-    });
-
-    window.deletePoem = function (id) {
-      if (!confirm('هل أنت متأكد من حذف هذا الشعر؟')) return;
-      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
-      const updated = poems.filter(p => p.id !== id);
-      localStorage.setItem('poemsList', JSON.stringify(updated));
-      loadPoems();
-    };
-
-    window.toggleExport = function (id) {
-      const poems = JSON.parse(localStorage.getItem('poemsList') || '[]');
-      const updated = poems.map(p => p.id === id ? { ...p, exported: !p.exported } : p);
-      localStorage.setItem('poemsList', JSON.stringify(updated));
-      loadPoems();
-    };
-
-    exportBtn.addEventListener('click', function () {
-      const data = JSON.parse(localStorage.getItem('poemsList')) || [];
-      const exportedPoems = data.filter(p => p.exported);
-      sessionStorage.setItem('exportedPoems', JSON.stringify(exportedPoems));
-      window.open('export-poems.html', '_blank');
-    });
-
-    loadPoems();
-  });
-</script>
 </body>
 </html>
